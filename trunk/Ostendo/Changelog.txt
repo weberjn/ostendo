@@ -1,0 +1,17 @@
+
+2006-08-20
+- Wrote xpath based tests
+
+2006-08-15
+- Added support for Reply Messages
+- Added support for Exceptions
+
+2006-08-14
+- wrote Client Interceptor to write Request and Reply Messages
+
+Version 0.1, 2006-08-12
+- 
+
+
+
+
