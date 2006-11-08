@@ -81,7 +81,7 @@
 			    <zipfileset prefix="${ant.project.name}"
 			    dir="." includes="build.xml,build.properties.template,COPYING,Changelog.txt,readme.txt"/>
 			<zipfileset prefix="${ant.project.name}"
-			 			    dir="." includes="www"/>
+			 			    dir="." includes="www/*.*"/>
 		    <zipfileset prefix="${ant.project.name}"
 		    dir="." includes="messagelog/*,ior.txt"/>
 		 	<zipfileset prefix="${ant.project.name}/src"
