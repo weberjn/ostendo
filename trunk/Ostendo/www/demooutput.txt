@@ -1,0 +1,45 @@
+Buildfile: build.xml
+
+rundemo:
+     [java] <?xml version="1.0" encoding="UTF-8"?>
+     [java] <messages>
+     [java] <message GIOPMajor="1" GIOPMinor="2" msgType="Request" msgSize="119" interface="IDL:ostendo/test/DataServer:1.0">
+     [java] <operation name="handleNested">
+     [java] <parameter name="astring" attribute="in" type="java.lang.String">hello</parameter>
+     [java] <parameter name="along" attribute="in" type="int">29.0</parameter>
+     [java] <parameter name="data" attribute="in" type="ostendo.test.Nested">
+     [java] <struct>
+     [java] <member name="ashort" type="short">5</member>
+     [java] <member name="aBasicTypes" type="ostendo.test.BasicTypes">
+     [java] <struct>
+     [java] <member name="afloat" type="float">3.14</member>
+     [java] <member name="adouble" type="double">6.28</member>
+     [java] <member name="ashort" type="short">1967</member>
+     [java] <member name="along" type="long">19671967</member>
+     [java] <member name="achar" type="char">X</member>
+     [java] <member name="aboolean" type="boolean">true</member>
+     [java] <member name="aoctet" type="octet">103</member>
+     [java] </struct>
+     [java] </member>
+     [java] </struct>
+     [java] </parameter>
+     [java] <parameter name="magic" attribute="in" type="java.lang.String">WJ</parameter>
+     [java] </operation>
+     [java] </message>
+     [java] <message GIOPMajor="1" GIOPMinor="2" msgType="Reply" msgSize="55" status="NO_EXCEPTION" interface="IDL:ostendo/test/DataServer:1.0">
+     [java] <operation name="handleNested">
+     [java] <result type="ostendo.test.OutData">
+     [java] <struct>
+     [java] <member name="id" type="string">theid</member>
+     [java] <member name="l" type="long">1967</member>
+     [java] <member name="s" type="string">String_s</member>
+     [java] <member name="f" type="float">3.1415</member>
+     [java] <member name="magic" type="string">WJ</member>
+     [java] </struct>
+     [java] </result>
+     [java] </operation>
+     [java] </message>
+     [java] </messages>
+
+BUILD SUCCESSFUL
+Total time: 12 seconds

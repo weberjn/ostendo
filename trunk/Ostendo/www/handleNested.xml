@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<messages>
+<message GIOPMajor="1" GIOPMinor="2" msgType="Request" msgSize="119" interface="IDL:ostendo/test/DataServer:1.0">
+<operation name="handleNested">
+<parameter name="astring" attribute="in" type="java.lang.String">hello</parameter>
+<parameter name="along" attribute="in" type="int">29.0</parameter>
+<parameter name="data" attribute="in" type="ostendo.test.Nested">
+<struct>
+<member name="ashort" type="short">5</member>
+<member name="aBasicTypes" type="ostendo.test.BasicTypes">
+<struct>
+<member name="afloat" type="float">3.14</member>
+<member name="adouble" type="double">6.28</member>
+<member name="ashort" type="short">1967</member>
+<member name="along" type="long">19671967</member>
+<member name="achar" type="char">X</member>
+<member name="aboolean" type="boolean">true</member>
+<member name="aoctet" type="octet">103</member>
+</struct>
+</member>
+</struct>
+</parameter>
+<parameter name="magic" attribute="in" type="java.lang.String">WJ</parameter>
+</operation>
+</message>
+<message GIOPMajor="1" GIOPMinor="2" msgType="Reply" msgSize="55" status="NO_EXCEPTION" interface="IDL:ostendo/test/DataServer:1.0">
+<operation name="handleNested">
+<result type="ostendo.test.OutData">
+<struct>
+<member name="id" type="string">theid</member>
+<member name="l" type="long">1967</member>
+<member name="s" type="string">String_s</member>
+<member name="f" type="float">3.1415</member>
+<member name="magic" type="string">WJ</member>
+</struct>
+</result>
+</operation>
+</message>
+</messages>
