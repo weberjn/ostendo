@@ -1,3 +1,5 @@
+2007-10-31
+- re-opened modules should work now
 
 2006-08-20
 - Wrote xpath based tests

@@ -107,7 +107,7 @@
 	    </path>
 		
 		<java classname="de.jwi.ostendo.Ostendo">
-	         <arg line="ior.txt server.idl messagelog/04-handleNested-Request.bin messagelog/04-handleNested-Reply.bin"/>
+	         <arg line="src/de/jwi/ostendo/testidl/server.idl IDL:ostendo/test/DataServer:1.0  messagelog/04-handleNested-Request.bin messagelog/04-handleNested-Reply.bin"/>
 	         <classpath>
 	           <path refid="runtime.path"/>
 	         </classpath>

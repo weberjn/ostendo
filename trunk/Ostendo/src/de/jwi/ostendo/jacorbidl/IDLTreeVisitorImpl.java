@@ -33,14 +33,14 @@ import org.jacorb.idl.Module;
 import org.jacorb.idl.NativeType;
 import org.jacorb.idl.OpDecl;
 import org.jacorb.idl.ParamDecl;
+import org.jacorb.idl.SimpleTypeSpec;
 import org.jacorb.idl.Spec;
 import org.jacorb.idl.StructType;
 import org.jacorb.idl.TypeDeclaration;
 import org.jacorb.idl.TypeDef;
 import org.jacorb.idl.UnionType;
 import org.jacorb.idl.Value;
-
-import de.jwi.ostendo.jacorbidl.ParserCaller;
+import org.jacorb.idl.VectorType;
 
 
 /**
@@ -164,6 +164,20 @@ public class IDLTreeVisitorImpl implements org.jacorb.idl.IDLTreeVisitor
 	public void visitValue(Value value)
 	{
 		System.out.println("");
+		
+	}
+
+	public void visitSimpleTypeSpec(SimpleTypeSpec arg0)
+	{
+		// TODO Auto-generated method stub
+		if (true) throw new RuntimeException("visitSimpleTypeSpec not implemented");
+		
+	}
+
+	public void visitVectorType(VectorType arg0)
+	{
+		// TODO Auto-generated method stub
+		if (true) throw new RuntimeException("visitVectorType not implemented");
 		
 	}
 

@@ -7,9 +7,6 @@ module ostendo
 
     module test {
 
-const long L = 3;
-const octet O2 = 5 + L;
-
 	struct InData
 	{
 		string id;
