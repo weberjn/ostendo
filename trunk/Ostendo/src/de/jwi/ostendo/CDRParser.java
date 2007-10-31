@@ -19,6 +19,8 @@
 
 package de.jwi.ostendo;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -92,6 +94,27 @@ public class CDRParser
 	private Object lastInteger;
 
 	private ORB orb;
+	
+	private static String version="";
+	
+	static
+	{
+		InputStream is = CDRParser.class.getResourceAsStream("/version.properties");
+		if (is!=null)
+		{
+			Properties p = new Properties();
+			try
+			{
+				p.load(is);
+				version = p.getProperty("version");
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+			
+		}
+	}
 
 	public CDRParser(ORB orb, Spec theParsedSpec, String typeId,
 			byte[] requestMessage, byte[] replyMessage)
@@ -161,7 +184,7 @@ public class CDRParser
 
 		Operation theOperation = findOperation(theInterface, operationName);
 		out.start();
-		Element messages = new Element("messages").att("Ostendo","1.0") ;
+		Element messages = new Element("messages").att("Ostendo",version) ;
 		out.startElement(messages);
 
 		element = new Element("message").att("interface", typeId);

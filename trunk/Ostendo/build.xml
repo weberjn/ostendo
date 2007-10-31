@@ -11,7 +11,7 @@
 	<property name="build" value="bin"/>
 	<property name="dist" value="dist"/>
 
-    <property file="version.properties"/>
+    <property file="${src}/version.properties"/>
 	
 	<path id="jacorb.classpath">
 		<fileset dir="${lib}">
