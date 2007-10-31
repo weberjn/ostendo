@@ -77,7 +77,7 @@ public class Ostendo
 	{
 		System.err.println("usage:");
 		System.err.println(Ostendo.class.getName()
-			+ " <IDL> <typeId> <requestmessage> [<replymessage>]");
+			+ " <typeId> <IDL> <requestmessage> [<replymessage>]");
 	}
 
 
@@ -89,8 +89,8 @@ public class Ostendo
 			System.exit(1);
 		}
 
-		String idlName = args[0];
-		String typeId = args[1];
+		String typeId = args[0];
+		String idlName = args[1];
 		String requestmessage = args[2];
 		String replymessage = null;
 

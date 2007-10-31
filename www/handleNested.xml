@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<messages>
-<message GIOPMajor="1" GIOPMinor="2" msgType="Request" msgSize="119" interface="IDL:ostendo/test/DataServer:1.0">
+<messages Ostendo="0.4">
+<message interface="IDL:ostendo/test/DataServer:1.0" msgType="Request" msgSize="119" GIOP="1.2">
 <operation name="handleNested">
 <parameter name="astring" attribute="in" type="java.lang.String">hello</parameter>
-<parameter name="along" attribute="in" type="int">29.0</parameter>
+<parameter name="along" attribute="in" type="int">29</parameter>
 <parameter name="data" attribute="in" type="ostendo.test.Nested">
 <struct>
 <member name="ashort" type="short">5</member>

@@ -41,6 +41,7 @@
 	  	     </condition>
   	   </fail>
 
+	    <echo message="Ostendo version = ${ostendo.version}"/>
 	    <echo message="Java version = ${java.version}"/>
 	  	<echo message="Using JacORB home = ${JACORB}"/>
 	  	<echo message="Using XALAN home = ${XALAN}"/>
@@ -67,7 +68,7 @@
 	  </target>
 	  
 	   <target name="jar" depends="compile">
-		      <jar jarfile="${dist}/${ant.project.name}-${version}.jar">
+		      <jar jarfile="${dist}/${ant.project.name}-${ostendo.version}.jar">
 		         <fileset dir="${build}" includes="de/jwi/ostendo/**/*.class"
 		         	excludes="de/jwi/ostendo/testidl/*.class"/>
  		      	 <fileset dir="." includes="version.properties"/>
@@ -75,9 +76,9 @@
 		  </target>	
 
 	  <target name="dist" depends="jar">
-		 <zip destfile="${dist}/${ant.project.name}-${version}.zip">
+		 <zip destfile="${dist}/${ant.project.name}-${ostendo.version}.zip">
 			    <zipfileset  prefix="${ant.project.name}/${dist}" 
-			    dir="${dist}" includes="${ant.project.name}-${version}.jar"/>
+			    dir="${dist}" includes="${ant.project.name}-${ostendo.version}.jar"/>
 			    <zipfileset prefix="${ant.project.name}"
 			    dir="." includes="build.xml,build.properties.template,COPYING,Changelog.txt,readme.txt"/>
 			<zipfileset prefix="${ant.project.name}"
@@ -95,19 +96,17 @@
 
 
 	
-	<target name="rundemo" >
+	<target name="rundemo" depends="init">
 		
 		<path id="runtime.path">
    			<fileset dir="${dist}">
-	    	<include name="*.jar"/>
-	    </fileset>
+	    		<include name="*.jar"/>
+	    	</fileset>
+			<path refid="jacorb.classpath"/>
+		</path>
 
-		       <path refid="jacorb.classpath"/>
-			<pathelement location="${dist}/${ant.project.name}-${version}.jar"/>
-	    </path>
-		
 		<java classname="de.jwi.ostendo.Ostendo">
-	         <arg line="src/de/jwi/ostendo/testidl/server.idl IDL:ostendo/test/DataServer:1.0  messagelog/04-handleNested-Request.bin messagelog/04-handleNested-Reply.bin"/>
+	         <arg line="IDL:ostendo/test/DataServer:1.0 src/de/jwi/ostendo/testidl/server.idl messagelog/04-handleNested-Request.bin messagelog/04-handleNested-Reply.bin"/>
 	         <classpath>
 	           <path refid="runtime.path"/>
 	         </classpath>
