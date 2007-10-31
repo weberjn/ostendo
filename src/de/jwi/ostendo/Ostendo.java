@@ -1,20 +1,12 @@
 /*
- * Ostendo - CORBA IIOP Message Analyzer
- * 
- * Copyright (C) 2006 Juergen Weber
- * 
- * This file is part of Ostendo.
- * 
- * Ostendo is free software; you can redistribute it and/or modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later
- * version.
- * 
- * Ostendo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License along with Ostendo; if not, write to the Free
- * Software Foundation, Inc., 59 Temple Place, Suite 330, Boston
+ * Ostendo - CORBA IIOP Message Analyzer Copyright (C) 2006 Juergen Weber This file is part of Ostendo.
+ * Ostendo is free software; you can redistribute it and/or modify it under the terms of the GNU General
+ * Public License as published by the Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version. Ostendo is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details. You should have received a copy of the GNU General Public
+ * License along with Ostendo; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite
+ * 330, Boston
  */
 
 package de.jwi.ostendo;
@@ -30,7 +22,6 @@ import org.jacorb.idl.Spec;
 
 import de.jwi.ostendo.jacorbidl.ParserCaller;
 
-
 /**
  * @author Juergen Weber 
  * Created on 28.07.2006
@@ -43,6 +34,7 @@ public class Ostendo
 		File f = new File(n);
 		return readMessage(f);
 	}
+
 
 	public static byte[] readMessage(File f) throws IOException
 	{
@@ -57,7 +49,8 @@ public class Ostendo
 
 		return b;
 	}
-	
+
+
 	public static String readIOR(String n) throws IOException
 	{
 		String s = null;
@@ -79,47 +72,54 @@ public class Ostendo
 		return s;
 	}
 
+
+	public static void usage()
+	{
+		System.err.println("usage:");
+		System.err.println(Ostendo.class.getName()
+			+ " <IDL> <typeId> <requestmessage> [<replymessage>]");
+	}
+
+
 	public static void main(String[] args) throws Exception
 	{
-		if (args.length<3)
+		if (args.length < 3)
 		{
-			System.err.println("usage:");
-			System.err.println(Ostendo.class.getName()+" <IOR> <IDL> <requestmessage> [<replymessage>]");
+			usage();
 			System.exit(1);
 		}
-		
-		String iorName = args[0];
-		String idlName = args[1];
+
+		String idlName = args[0];
+		String typeId = args[1];
 		String requestmessage = args[2];
 		String replymessage = null;
 
-		if (args.length>3)
+		if (args.length > 3)
 		{
 			replymessage = args[3];
 		}
-		
-		
+
 		Spec theParsedSpec = ParserCaller.getInstance().loadIDL(idlName);
-		
+
 		if (theParsedSpec == null)
 		{
 			throw new RuntimeException("could not parse IDL " + idlName);
 		}
 
-		String ior = readIOR(iorName);
-
+		String iorOrInterface = null;
+		
 		Output out = new XMLOutput(new PrintWriter(System.out));
 
 		byte[] messageReq = readMessage(requestmessage);
 
 		byte[] messageRepl = null;
-		
+
 		if (replymessage != null)
 		{
 			messageRepl = readMessage(replymessage);
 		}
 
-		CDRParser c = new CDRParser(theParsedSpec, ior, messageReq, messageRepl);
+		CDRParser c = new CDRParser(theParsedSpec, typeId, messageReq, messageRepl);
 
 		c.parseMessage(out);
 

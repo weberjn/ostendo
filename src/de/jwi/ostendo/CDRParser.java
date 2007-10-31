@@ -60,7 +60,6 @@ import org.jacorb.idl.TypeSpec;
 import org.jacorb.idl.UnionType;
 import org.jacorb.idl.VoidTypeSpec;
 import org.jacorb.orb.ORB;
-import org.jacorb.orb.ParsedIOR;
 import org.jacorb.orb.Reference;
 import org.jacorb.orb.giop.MessageInputStream;
 import org.jacorb.orb.giop.Messages;
@@ -86,7 +85,7 @@ public class CDRParser
 
 	private Spec theParsedSpec;
 
-	private String ior;
+	private String typeId;
 
 	private byte[] requestMessage, replyMessage;
 
@@ -94,18 +93,18 @@ public class CDRParser
 
 	private ORB orb;
 
-	public CDRParser(ORB orb, Spec theParsedSpec, String ior,
+	public CDRParser(ORB orb, Spec theParsedSpec, String typeId,
 			byte[] requestMessage, byte[] replyMessage)
 	{
 		this.orb = orb;
 		this.theParsedSpec = theParsedSpec;
-		this.ior = ior;
+		this.typeId = typeId;
 		this.requestMessage = requestMessage;
 		this.replyMessage = replyMessage;
 	}
 
-	public CDRParser(Spec theParsedSpec, String ior,
-			byte[] requestMessage, byte[] replyMessage)
+	public CDRParser(Spec theParsedSpec, String ior, byte[] requestMessage,
+			byte[] replyMessage)
 	{
 		this(null, theParsedSpec, ior, requestMessage, replyMessage);
 	}
@@ -131,14 +130,15 @@ public class CDRParser
 			p.setProperty("org.omg.CORBA.ORBSingletonClass",
 					"org.jacorb.orb.ORBSingleton");
 
-			orb = (org.jacorb.orb.ORB)ORB.init((String[]) null, p);
+			orb = (org.jacorb.orb.ORB) ORB.init((String[]) null, p);
 		}
 
-		ParsedIOR pIOR = new ParsedIOR(orb, ior);
-
-		String typeId = pIOR.getTypeId();
-
-		Interface theInterface = findInterface(theParsedSpec, pIOR);
+		Interface theInterface = findInterfaceByTypeID(theParsedSpec, typeId);
+		if (theInterface == null)
+		{
+			throw new RuntimeException("No interface found for " + typeId
+					+ " in parsed IDL.");
+		}
 
 		_GIOPMajor = Messages.getGIOPMajor(requestMessage);
 		_GIOPMinor = Messages.getGIOPMinor(requestMessage);
@@ -161,16 +161,16 @@ public class CDRParser
 
 		Operation theOperation = findOperation(theInterface, operationName);
 		out.start();
-		Element messages = new Element("messages");
+		Element messages = new Element("messages").att("Ostendo","1.0") ;
 		out.startElement(messages);
 
-		element = new Element("message");
-		element.att("GIOPMajor", Integer.toString(_GIOPMajor)).att("GIOPMinor",
-				Integer.toString(_GIOPMinor));
+		element = new Element("message").att("interface", typeId);
 		element.att("msgType", msgTypeS).att("msgSize",
 				Integer.toString(msgSize));
+		element.att("GIOP", Integer.toString(_GIOPMajor)+"."+
+				Integer.toString(_GIOPMinor));
 
-		element.att("interface", typeId);
+		
 		out.startElement(element);
 
 		listOperationRequest(theOperation);
@@ -261,8 +261,8 @@ public class CDRParser
 		if (replyStatus == ReplyStatusType_1_2.NO_EXCEPTION)
 		{
 			String type = opDecl.opTypeSpec.getIDLTypeName();
-			
-			Element result = new Element("result").att("type",type);
+
+			Element result = new Element("result").att("type", type);
 			out.startElement(result);
 
 			listType(opDecl.opTypeSpec);
@@ -437,8 +437,9 @@ public class CDRParser
 		String elementType = sequenceType.elementTypeSpec().getIDLTypeName();
 
 
-		Element sequence = new Element("sequence").att("elementtype",
-				elementType);
+		Element sequence = new Element("sequence").att("length",
+				Integer.toString(sequenceLength)).att("elementtype",
+						elementType);
 		out.startElement(sequence);
 
 		for (i = 0; i < sequenceLength; i++)
@@ -557,9 +558,10 @@ public class CDRParser
 		SwitchBody switchBody = unionType.switch_body;
 
 		Case c = null, actualCase = null, defaultCase = null;
-		for( Enumeration e = switchBody.caseListVector.elements(); e.hasMoreElements(); )
-        {
-			c = (Case)e.nextElement();
+		for (Enumeration e = switchBody.caseListVector.elements(); e
+				.hasMoreElements();)
+		{
+			c = (Case) e.nextElement();
 
 			for (en = c.case_label_list.elements(); en.hasMoreElements();)
 			{
@@ -605,7 +607,7 @@ public class CDRParser
 		// I can't believe this
 		TypeSpec t = actualCase.element_spec.typeSpec;
 
-		//		lastInteger
+		//	lastInteger
 
 		String bodyType = t.getIDLTypeName();
 
@@ -775,8 +777,8 @@ public class CDRParser
 		long value = currentMessageInputStream.read_longlong();
 		out.data(value);
 	}
-	
-	
+
+
 	private void listType(BooleanType type) throws OutputException
 	{
 		boolean value = currentMessageInputStream.read_boolean();
@@ -844,7 +846,7 @@ public class CDRParser
 				long llvalue = currentMessageInputStream.read_longlong();
 				out.data(llvalue);
 				break;
-				
+
 			case org.omg.CORBA.TCKind._tk_octet:
 				byte ovalue = currentMessageInputStream.read_octet();
 				out.data(ovalue);
@@ -866,43 +868,23 @@ public class CDRParser
 	}
 
 
-	private Interface findInterface(Spec theParsedSpec, ParsedIOR pIOR)
+	private Interface findInterfaceByTypeID(Spec theParsedSpec, String typeId)
 	{
-		String typeId = pIOR.getTypeId();
+		// typeId:
 		// IDL:demo/getdata/DataServer:1.0
 
 		String[] s0 = typeId.split(":");
-		String[] s1 = s0[1].split("/");
+		String[] mods = s0[1].split("/");
 
 		Interface result = null;
 
-		if (s1.length > 1)
+		if (mods.length < 2)
 		{
-			Module m1 = findModule(theParsedSpec, s1[0]);
-			Module mx = m1;
-
-			if (s1.length > 2)
-			{
-				for (int i = 1; i < s1.length - 1; i++)
-				{
-					mx = findModule(mx, s1[i]);
-				}
-			}
-
-			result = findInterface(mx, s1[s1.length - 1]);
-
-		}
-		else
-		{
-			result = findInterface(theParsedSpec, s1[s1.length - 1]);
+			result = findInterface(theParsedSpec, mods[0]);
+			return result;
 		}
 
-		return result;
-	}
-
-	private Module findModule(Spec spec, String name)
-	{
-		Enumeration e = spec.definitions.elements();
+		Enumeration e = theParsedSpec.definitions.elements();
 		while (e.hasMoreElements())
 		{
 			IdlSymbol s = ((IdlSymbol) e.nextElement());
@@ -915,19 +897,28 @@ public class CDRParser
 				if (dc instanceof Module)
 				{
 					String n = ((Module) dc).name();
-					if (name.equals(n))
+					//System.out.println("Module: "+n);
+					if (mods[0].equals(n))
 					{
-						return (Module) dc;
+						result = findModuleInterface((Module) dc, mods, 1);
+						if (result != null)
+						{
+							return result;
+						}
 					}
 				}
 			}
 		}
-
+		
 		return null;
+
 	}
 
-	private Module findModule(Module module, String name)
+
+	private Interface findModuleInterface(Module module, String[] mods, int pos)
 	{
+		Interface ifc = null;
+		
 		Enumeration e = module.getDefinitions().elements();
 		while (e.hasMoreElements())
 		{
@@ -938,12 +929,29 @@ public class CDRParser
 				Definition d = (Definition) s;
 				Declaration dc = d.get_declaration();
 
+				if (dc instanceof Interface)
+				{
+					String n = ((Interface) dc).name();
+					if (mods[pos].equals(n))
+					{
+						return (Interface) dc;
+					}
+				}
 				if (dc instanceof Module)
 				{
-					String n = ((Module) dc).name();
-					if (name.equals(n))
+					Module m = (Module) dc;
+					String n = m.name();
+					if (mods[pos].equals(n))
 					{
-						return (Module) dc;
+						if (pos == mods.length)
+						{
+							ifc = findInterface(m, mods[mods.length-1]);
+						}
+						else
+						{
+							ifc = findModuleInterface(m, mods, pos + 1);
+						}
+						return ifc;
 					}
 				}
 			}
