@@ -60,8 +60,7 @@
 	
 	  <target name="compile" depends="init">
 	    <javac target="1.4" destdir="${build}" 
-	    	includes="de/jwi/ostendo/**"
-	    	excludes="de/jwi/ostendo/testidl/**,ostendo/**">
+	    	includes="de/jwi/ostendo/*">
 	    	 <src path="${src}"/>
 		    <classpath refid="jacorb.classpath"/>
 	    </javac>
@@ -134,6 +133,34 @@
 		</javac>
 	</target>
 	
+	<target name="testserver">
+		<java classname="de.jwi.ostendo.testidl.Server" fork="true">
+	         <arg line="ior.txt"/>
+	         <classpath>
+	           <path refid="jacorb.classpath"/>
+	         	<path location="${build}"/>
+	         </classpath>
+			<sysproperty key="org.omg.CORBA.ORBClass" value="org.jacorb.orb.ORB"/>
+			<sysproperty key="org.omg.CORBA.ORBSingletonClass" value="org.jacorb.orb.ORBSingleton"/>
+	       </java>		
+	   </target>     	
+
+	<target name="testclient">
+		<java classname="de.jwi.ostendo.testidl.Client" fork="true">
+	         <arg line="ior.txt"/>
+	         <classpath>
+	           <path refid="jacorb.classpath"/>
+	         	<path location="${build}"/>
+	         </classpath>
+			<sysproperty key="org.omg.CORBA.ORBClass" value="org.jacorb.orb.ORB"/>
+			<sysproperty key="org.omg.CORBA.ORBSingletonClass" value="org.jacorb.orb.ORBSingleton"/>
+	       </java>		
+	   </target>     	
 	
-	
+	<target name="test">
+		<junit printsummary="yes" fork="yes" haltonfailure="yes">
+		  <formatter type="plain"/>
+		  <test name="de.jwi.ostendo.test.OstendoTest"/>
+		</junit> 
+	</target>     		
 </project>

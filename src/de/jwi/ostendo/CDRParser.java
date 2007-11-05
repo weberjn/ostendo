@@ -22,6 +22,7 @@ package de.jwi.ostendo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -69,6 +70,7 @@ import org.jacorb.orb.giop.ReplyInputStream;
 import org.jacorb.orb.giop.RequestInputStream;
 import org.omg.GIOP.MsgType_1_1;
 import org.omg.GIOP.ReplyStatusType_1_2;
+import org.omg.IOP.ServiceContext;
 
 /**
  * @author Juergen Weber 
@@ -91,16 +93,17 @@ public class CDRParser
 
 	private byte[] requestMessage, replyMessage;
 
-	private Object lastInteger;
+	private Object switch_type_encountered;
 
 	private ORB orb;
-	
-	private static String version="";
-	
+
+	private static String version = "";
+
 	static
 	{
-		InputStream is = CDRParser.class.getResourceAsStream("/version.properties");
-		if (is!=null)
+		InputStream is = CDRParser.class
+				.getResourceAsStream("/version.properties");
+		if (is != null)
 		{
 			Properties p = new Properties();
 			try
@@ -112,7 +115,7 @@ public class CDRParser
 			{
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
 
@@ -184,18 +187,20 @@ public class CDRParser
 
 		Operation theOperation = findOperation(theInterface, operationName);
 		out.start();
-		Element messages = new Element("messages").att("Ostendo",version) ;
+		Element messages = new Element("messages").att("Ostendo", version);
 		out.startElement(messages);
 
 		element = new Element("message").att("interface", typeId);
 		element.att("msgType", msgTypeS).att("msgSize",
 				Integer.toString(msgSize));
-		element.att("GIOP", Integer.toString(_GIOPMajor)+"."+
-				Integer.toString(_GIOPMinor));
+		element.att("GIOP", Integer.toString(_GIOPMajor) + "."
+				+ Integer.toString(_GIOPMinor));
 
-		
+
 		out.startElement(element);
 
+		listServiceContexts(misRequest.req_hdr.service_context);
+		
 		listOperationRequest(theOperation);
 
 		out.endElement(element);
@@ -227,6 +232,8 @@ public class CDRParser
 			element.att("interface", typeId);
 			out.startElement(element);
 
+			listServiceContexts(misReply.rep_hdr.service_context);
+			
 			listOperationReply(theOperation, replyStatus);
 
 			out.endElement(element);
@@ -237,6 +244,31 @@ public class CDRParser
 		out.end();
 	}
 
+	private void listServiceContexts(org.omg.IOP.ServiceContext[] service_context) throws OutputException
+	{
+		Element serviceContexts = new Element("servicecontexts");
+		Element context;
+		
+		out.startElement(serviceContexts);
+		
+		for (int i=0; i<service_context.length;i++)
+		{
+			ServiceContext sc = service_context[i];
+			
+			
+			context = new Element("context");
+			context.att("id", Integer.toString(sc.context_id));
+			out.startElement(context);
+			
+			String s = toString(sc.context_data);
+			out.data(s);
+			
+			out.endElement(context);
+		}
+		
+		out.endElement(serviceContexts);
+	}
+	
 	private void listOperationRequest(Operation operation)
 			throws OutputException
 	{
@@ -317,37 +349,36 @@ public class CDRParser
 		}
 		out.endElement(element);
 	}
+	
+	String[] completionStatusStrings = {"COMPLETED_YES", "COMPLETED_NO","COMPLETED_MAYBE"};
 
 	private void listSystemException() throws OutputException
 	{
+		org.omg.CORBA.SystemException systemException = 
+		org.jacorb.orb.SystemExceptionHelper.read(currentMessageInputStream);
+		
 		Element element = new Element("SystemException");
 		out.startElement(element);
 
-		String exception_id = currentMessageInputStream.read_string();
-
-		int minor_code_value = currentMessageInputStream.read_long();
-
-		int completion_status = currentMessageInputStream.read_long();
-
-
 		Element content;
 
-		content = new Element("exception_id");
+		content = new Element("class");
 		out.startElement(content);
-		out.data(exception_id);
+		out.data(systemException.getClass().getName());
 		out.endElement(content);
 
-		content = new Element("minor_code_value");
+		content = new Element("minor");
 		out.startElement(content);
-		out.data(minor_code_value);
+		out.data(systemException.minor);
 		out.endElement(content);
 
-		content = new Element("completion_status");
+		content = new Element("completionstatus");
 		out.startElement(content);
-		out.data(completion_status);
+		out.data(completionStatusStrings[systemException.completed.value()]);
 		out.endElement(content);
 
-
+		out.data(systemException.getMessage());
+		
 		out.endElement(element);
 	}
 
@@ -462,7 +493,7 @@ public class CDRParser
 
 		Element sequence = new Element("sequence").att("length",
 				Integer.toString(sequenceLength)).att("elementtype",
-						elementType);
+				elementType);
 		out.startElement(sequence);
 
 		for (i = 0; i < sequenceLength; i++)
@@ -556,6 +587,13 @@ public class CDRParser
 	{
 		//		 @see org.jacorb.idl.UnionType.printHelperClass()
 
+		/*
+		15.3.2.3 Union
+		Unions are encoded as the discriminant tag of the type specified in the union
+		declaration, followed by the representation of any selected member, encoded as its type
+		indicates.
+		 */
+
 		Enumeration en;
 
 		TypeSpec switch_type_spec = unionType.switch_type_spec.type_spec;
@@ -568,14 +606,28 @@ public class CDRParser
 					.resolvedTypeSpec();
 		}
 
+		String unionTypeName = unionType.name();
+		
+		String switchTypeName = switch_ts_resolved.toString();
+		
+		Element unionElement = new Element("union").att("type", unionTypeName);
+		out.startElement(unionElement);
+
+		Element switchElement = new Element("switch").att("type", switchTypeName);
+		out.startElement(switchElement);
+		
 		listType(switch_type_spec);
 
-		String disc = lastInteger.toString();
+		out.endElement(switchElement);
+		
+		String disc = switch_type_encountered.toString();
+		
 
+		
+		//.att(				"value", disc);
+		
 		String discType = switch_type_spec.getIDLTypeName();
 
-		Element element = new Element("union").att("switchtype", discType).att(
-				"value", disc);
 
 
 		SwitchBody switchBody = unionType.switch_body;
@@ -623,23 +675,35 @@ public class CDRParser
 			}
 			else
 			{
-				throw new RuntimeException("unknown case met");
+				// boolean false
+				actualCase = null;
 			}
 		}
 
-		// I can't believe this
-		TypeSpec t = actualCase.element_spec.typeSpec;
+		if (actualCase != null)
+		{
+			// I can't believe this
+			TypeSpec t = actualCase.element_spec.typeSpec;
 
-		//	lastInteger
+			//	lastInteger
 
-		String bodyType = t.getIDLTypeName();
+			String bodyType = t.getIDLTypeName();
 
-		element.att("bodyType", bodyType);
-		out.startElement(element);
+//			unionElement.att("bodyType", bodyType);
+	
+			Element bodyElement = new Element("body").att("type", bodyType);
+			out.startElement(bodyElement);
 
-		listType(t);
+			
+			listType(t);
 
-		out.endElement(element);
+			out.endElement(bodyElement);
+
+		}
+		
+		
+		
+		out.endElement(unionElement);
 	}
 
 	private void listType(EnumType enumType) throws OutputException
@@ -784,14 +848,14 @@ public class CDRParser
 	private void listType(ShortType type) throws OutputException
 	{
 		short value = currentMessageInputStream.read_short();
-		lastInteger = new Short(value);
+		switch_type_encountered = new Short(value);
 		out.data(value);
 	}
 
 	private void listType(LongType type) throws OutputException
 	{
 		int value = currentMessageInputStream.read_long();
-		lastInteger = new Integer(value);
+		switch_type_encountered = new Integer(value);
 		out.data(value);
 	}
 
@@ -805,7 +869,7 @@ public class CDRParser
 	private void listType(BooleanType type) throws OutputException
 	{
 		boolean value = currentMessageInputStream.read_boolean();
-		lastInteger = new Boolean(value);
+		switch_type_encountered = new Boolean(value);
 		out.data(value);
 	}
 
@@ -819,7 +883,7 @@ public class CDRParser
 	private void listType(CharType type) throws OutputException
 	{
 		char value = currentMessageInputStream.read_char();
-		lastInteger = new Character(value);
+		switch_type_encountered = new Character(value);
 		out.data(value);
 	}
 
@@ -856,7 +920,7 @@ public class CDRParser
 
 			case org.omg.CORBA.TCKind._tk_short:
 				short svalue = currentMessageInputStream.read_short();
-				lastInteger = new Short(svalue);
+				switch_type_encountered = new Short(svalue);
 				out.data(svalue);
 				break;
 
@@ -932,7 +996,7 @@ public class CDRParser
 				}
 			}
 		}
-		
+
 		return null;
 
 	}
@@ -941,7 +1005,7 @@ public class CDRParser
 	private Interface findModuleInterface(Module module, String[] mods, int pos)
 	{
 		Interface ifc = null;
-		
+
 		Enumeration e = module.getDefinitions().elements();
 		while (e.hasMoreElements())
 		{
@@ -968,7 +1032,7 @@ public class CDRParser
 					{
 						if (pos == mods.length)
 						{
-							ifc = findInterface(m, mods[mods.length-1]);
+							ifc = findInterface(m, mods[mods.length - 1]);
 						}
 						else
 						{
@@ -1057,4 +1121,46 @@ public class CDRParser
 		return null;
 
 	}
+	
+	private String toHex(byte b)
+	{
+		char[] c = new char[2];
+
+		c[0] = Character.forDigit((b & 0xf0) >> 4, 16);
+		c[1] = Character.forDigit((b & 0xf), 16);
+
+		return new String(c);
+	}
+
+	private String toString(byte[] message)
+	{
+		StringBuffer sb = new StringBuffer();
+		int i, p = 0, n = message.length;
+
+
+		int s;
+
+		byte[] chunk;
+
+		for (i=0;i<n;i++)
+		{
+				sb.append(toHex(message[i]));
+				sb.append(' ');
+		}
+		sb.append(' ');
+		
+		for (i=0;i<n;i++)
+		{
+				char c = (char) message[i];
+				if (!(Character.isLetterOrDigit(c)))
+				{
+					c = '.';
+				}
+				sb.append(c);
+
+		}
+		
+		return sb.toString();
+	}
+
 }
