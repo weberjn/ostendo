@@ -62,7 +62,7 @@ public class OstendoTest extends TestCase
 
 	File messageDir;
 
-	String ior;
+	String repositoryID;
 
 	org.jacorb.orb.ORB orb;
 
@@ -76,9 +76,7 @@ public class OstendoTest extends TestCase
 
 		theParsedSpec = ParserCaller.getInstance().loadIDL(idlName);
 
-		String iorName = "ior.txt";
-
-		ior = Ostendo.readIOR(iorName);
+		repositoryID = ostendo.test.DataServerHelper.id();
 
 		Properties p = new Properties();
 		p.setProperty("org.omg.CORBA.ORBClass", "org.jacorb.orb.ORB");
@@ -100,7 +98,7 @@ public class OstendoTest extends TestCase
 				requestName));
 		byte[] replyMsg = Ostendo.readMessage(new File(messageDir, replyName));
 
-		CDRParser c = new CDRParser(orb, theParsedSpec, ior,
+		CDRParser c = new CDRParser(orb, theParsedSpec, repositoryID,
 				requestMsg, replyMsg);
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream(4096);
