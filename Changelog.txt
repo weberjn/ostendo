@@ -1,3 +1,7 @@
+2007-11-12
+- graceful bailing out of broken messages
+- output current position in CDRStream
+
 2007-10-31
 - re-opened modules should work now
 
