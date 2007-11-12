@@ -21,6 +21,7 @@ package de.jwi.ostendo;
 
 import java.io.Writer;
 import java.math.BigDecimal;
+import java.util.Stack;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -36,6 +37,7 @@ import javax.xml.transform.stream.StreamResult;
 public class XMLOutput implements Output
 {
 	TransformerHandler transformerHandler;
+	Stack openElements;
 
 	public XMLOutput(Writer out) throws OutputException
 	{
@@ -53,6 +55,8 @@ public class XMLOutput implements Output
 			StreamResult streamResult = new StreamResult(out);
 
 			transformerHandler.setResult(streamResult);
+			
+			openElements = new Stack();
 		}
 		catch (Exception e)
 		{
@@ -85,6 +89,19 @@ public class XMLOutput implements Output
 		}
 	}
 
+	public void popElements(Element lastToPop) throws OutputException
+	{
+		while (  !openElements.empty())
+		{
+			if (openElements.peek() == lastToPop)
+			{
+				break;
+			}
+			Element e = (Element)openElements.pop();
+			endElement(e);
+		}
+	}
+	
 	public void startElement(Element element) throws OutputException
 	{
 
@@ -92,6 +109,8 @@ public class XMLOutput implements Output
 		{
 			transformerHandler.startElement("", "", element.getName(), element
 					.getAttributes());
+			
+			openElements.push(element);
 		}
 		catch (Exception e)
 		{
@@ -105,6 +124,8 @@ public class XMLOutput implements Output
 		try
 		{
 			transformerHandler.endElement("", "", element.getName());
+			
+			openElements.pop();
 		}
 		catch (Exception e)
 		{

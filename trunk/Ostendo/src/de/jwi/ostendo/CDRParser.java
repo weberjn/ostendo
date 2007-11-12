@@ -21,6 +21,8 @@ package de.jwi.ostendo;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -181,6 +183,8 @@ public class CDRParser
 
 		misRequest = new RequestInputStream(orb, requestMessage);
 
+		currentMessageInputStream = misRequest;
+
 		int messageLen = misRequest.msg_size;
 
 		String operationName = misRequest.req_hdr.operation;
@@ -190,7 +194,9 @@ public class CDRParser
 		Element messages = new Element("messages").att("Ostendo", version);
 		out.startElement(messages);
 
-		element = new Element("message").att("interface", typeId);
+		int pos = currentMessageInputStream.get_pos();
+		
+		element = new Element("message").att("position", Integer.toHexString(pos)).att("interface", typeId);
 		element.att("msgType", msgTypeS).att("msgSize",
 				Integer.toString(msgSize));
 		element.att("GIOP", Integer.toString(_GIOPMajor) + "."
@@ -200,7 +206,7 @@ public class CDRParser
 		out.startElement(element);
 
 		listServiceContexts(misRequest.req_hdr.service_context);
-		
+
 		listOperationRequest(theOperation);
 
 		out.endElement(element);
@@ -211,7 +217,9 @@ public class CDRParser
 			// TODO checks for reqID and Object equality
 
 			misReply = new ReplyInputStream(orb, replyMessage);
-
+			
+			currentMessageInputStream = misReply;
+			
 			_GIOPMajor = Messages.getGIOPMajor(replyMessage);
 			_GIOPMinor = Messages.getGIOPMinor(replyMessage);
 			requestId = Messages.getRequestId(replyMessage);
@@ -233,7 +241,7 @@ public class CDRParser
 			out.startElement(element);
 
 			listServiceContexts(misReply.rep_hdr.service_context);
-			
+
 			listOperationReply(theOperation, replyStatus);
 
 			out.endElement(element);
@@ -244,56 +252,84 @@ public class CDRParser
 		out.end();
 	}
 
-	private void listServiceContexts(org.omg.IOP.ServiceContext[] service_context) throws OutputException
+	private void listServiceContexts(
+			org.omg.IOP.ServiceContext[] service_context)
+			throws OutputException
 	{
-		Element serviceContexts = new Element("servicecontexts");
+		int pos = currentMessageInputStream.get_pos();
+		
+		Element serviceContexts = new Element("servicecontexts").att("position", Integer.toHexString(pos));
 		Element context;
-		
+
 		out.startElement(serviceContexts);
-		
-		for (int i=0; i<service_context.length;i++)
+
+		for (int i = 0; i < service_context.length; i++)
 		{
 			ServiceContext sc = service_context[i];
-			
-			
+
+
 			context = new Element("context");
 			context.att("id", Integer.toString(sc.context_id));
 			out.startElement(context);
-			
+
 			String s = toString(sc.context_data);
 			out.data(s);
-			
+
 			out.endElement(context);
 		}
-		
+
 		out.endElement(serviceContexts);
 	}
-	
+
 	private void listOperationRequest(Operation operation)
 			throws OutputException
 	{
 		OpDecl opDecl = (OpDecl) operation;
 		String name = opDecl.name();
 
-		Element element = new Element("operation");
+		int pos = currentMessageInputStream.get_pos();
+		
+		Element element = new Element("operation").att("position", Integer.toHexString(pos));
 		element.att("name", name);
 		out.startElement(element);
 
-		currentMessageInputStream = misRequest;
-
-		for (Enumeration e = opDecl.paramDecls.elements(); e.hasMoreElements();)
+		try
 		{
-			ParamDecl p = ((ParamDecl) e.nextElement());
-
-			if (p.paramAttribute != ParamDecl.MODE_OUT)
+			for (Enumeration e = opDecl.paramDecls.elements(); e
+					.hasMoreElements();)
 			{
-				listParameter(p);
+				ParamDecl p = ((ParamDecl) e.nextElement());
+
+				if (p.paramAttribute != ParamDecl.MODE_OUT)
+				{
+					listParameter(p);
+				}
 			}
+		}
+		catch (RuntimeException e)
+		{
+			outputParseException(e);
+			out.popElements(element);
 		}
 
 		out.endElement(element);
 	}
 
+	private void outputParseException(RuntimeException e) throws OutputException
+	{
+		Element broken = new Element("BrokenMessage");
+		out.startElement(broken);
+
+		StringWriter sw = new StringWriter();
+
+		e.printStackTrace(new PrintWriter(sw));
+		String s = sw.toString();
+
+		out.data(s);
+		
+		out.endElement(broken);
+	}
+	
 	private void listOperationReply(Operation operation,
 			ReplyStatusType_1_2 replyStatus) throws OutputException
 	{
@@ -307,57 +343,71 @@ public class CDRParser
 		OpDecl opDecl = (OpDecl) operation;
 		String name = opDecl.name();
 
-		Element element = new Element("operation");
+		int pos = currentMessageInputStream.get_pos();
+		
+		Element element = new Element("operation").att("position", Integer.toHexString(pos));
 		element.att("name", name);
 		out.startElement(element);
 
-		currentMessageInputStream = misReply;
 
-		if (replyStatus == ReplyStatusType_1_2.NO_EXCEPTION)
+		try
 		{
-			String type = opDecl.opTypeSpec.getIDLTypeName();
-
-			Element result = new Element("result").att("type", type);
-			out.startElement(result);
-
-			listType(opDecl.opTypeSpec);
-
-			for (Enumeration e = opDecl.paramDecls.elements(); e
-					.hasMoreElements();)
+			if (replyStatus == ReplyStatusType_1_2.NO_EXCEPTION)
 			{
-				ParamDecl p = ((ParamDecl) e.nextElement());
+				String type = opDecl.opTypeSpec.getIDLTypeName();
 
-				if (p.paramAttribute != ParamDecl.MODE_IN)
+				pos = currentMessageInputStream.get_pos();
+				
+				Element result = new Element("result").att("position", Integer.toHexString(pos)).att("type", type);
+				out.startElement(result);
+
+				listType(opDecl.opTypeSpec);
+
+				for (Enumeration e = opDecl.paramDecls.elements(); e
+						.hasMoreElements();)
 				{
-					listParameter(p);
+					ParamDecl p = ((ParamDecl) e.nextElement());
+
+					if (p.paramAttribute != ParamDecl.MODE_IN)
+					{
+						listParameter(p);
+					}
 				}
-			}
 
-			out.endElement(result);
+				out.endElement(result);
+			}
+			else
+			{
+				if (replyStatus == ReplyStatusType_1_2.SYSTEM_EXCEPTION)
+				{
+					listSystemException();
+				}
+				else if (replyStatus == ReplyStatusType_1_2.USER_EXCEPTION)
+				{
+					listUserException(opDecl.raisesExpr);
+				}
+
+			}
 		}
-		else
+		catch (RuntimeException e)
 		{
-			if (replyStatus == ReplyStatusType_1_2.SYSTEM_EXCEPTION)
-			{
-				listSystemException();
-			}
-			else if (replyStatus == ReplyStatusType_1_2.USER_EXCEPTION)
-			{
-				listUserException(opDecl.raisesExpr);
-			}
-
+			outputParseException(e);
+			out.popElements(element);
 		}
 		out.endElement(element);
 	}
-	
-	String[] completionStatusStrings = {"COMPLETED_YES", "COMPLETED_NO","COMPLETED_MAYBE"};
+
+	String[] completionStatusStrings = {"COMPLETED_YES", "COMPLETED_NO",
+			"COMPLETED_MAYBE"};
 
 	private void listSystemException() throws OutputException
 	{
-		org.omg.CORBA.SystemException systemException = 
-		org.jacorb.orb.SystemExceptionHelper.read(currentMessageInputStream);
+		org.omg.CORBA.SystemException systemException = org.jacorb.orb.SystemExceptionHelper
+				.read(currentMessageInputStream);
+
+		int pos = currentMessageInputStream.get_pos();
 		
-		Element element = new Element("SystemException");
+		Element element = new Element("SystemException").att("position", Integer.toHexString(pos));
 		out.startElement(element);
 
 		Element content;
@@ -378,7 +428,7 @@ public class CDRParser
 		out.endElement(content);
 
 		out.data(systemException.getMessage());
-		
+
 		out.endElement(element);
 	}
 
@@ -389,7 +439,11 @@ public class CDRParser
 
 		String[] exIDs = raisesExpr.getExceptionIds();
 
-		String repositoryId = currentMessageInputStream.read_string();
+		String repositoryId = null;
+		
+		int pos = currentMessageInputStream.get_pos();		
+
+		currentMessageInputStream.read_string();
 
 		for (i = 0; i < exIDs.length; i++)
 		{
@@ -403,7 +457,7 @@ public class CDRParser
 
 		TypeSpec t = sn.resolvedTypeSpec();
 
-		Element element = new Element("UserException");
+		Element element = new Element("UserException").att("position", Integer.toHexString(pos));
 		element.att("repositoryId", repositoryId);
 		out.startElement(element);
 
@@ -432,8 +486,10 @@ public class CDRParser
 
 		String pname = p.simple_declarator.name();
 		String ptype = p.paramTypeSpec.getIDLTypeName();
+		
+		int pos = currentMessageInputStream.get_pos();
 
-		Element element = new Element("parameter").att("name", pname).att(
+		Element element = new Element("parameter").att("position", Integer.toHexString(pos)).att("name", pname).att(
 				"attribute", paramAttr).att("type", ptype);
 		out.startElement(element);
 
@@ -490,8 +546,9 @@ public class CDRParser
 
 		String elementType = sequenceType.elementTypeSpec().getIDLTypeName();
 
-
-		Element sequence = new Element("sequence").att("length",
+		int pos = currentMessageInputStream.get_pos();
+		
+		Element sequence = new Element("sequence").att("position", Integer.toHexString(pos)).att("length",
 				Integer.toString(sequenceLength)).att("elementtype",
 				elementType);
 		out.startElement(sequence);
@@ -514,7 +571,12 @@ public class CDRParser
 		int i;
 
 		int[] dims = arrayTypeSpec.dims;
+		
+		int pos = currentMessageInputStream.get_pos();	
 
+		Element array = new Element("array").att("position", Integer.toHexString(pos));
+		out.startElement(array);
+		
 		ArrayTypeSpec t = arrayTypeSpec;
 		for (i = 0; i < dims.length - 1; i++)
 		{
@@ -523,6 +585,8 @@ public class CDRParser
 		TypeSpec elementTypeSpec = t.elementTypeSpec();
 
 		walkArray(dims, 0, elementTypeSpec);
+		
+		out.endElement(array);
 	}
 
 	private void walkArray(int[] dims, int k, TypeSpec t)
@@ -557,7 +621,9 @@ public class CDRParser
 	{
 		// @see org.jacorb.idl.StructType.printHelperClass()
 
-		Element element = new Element("struct");
+		int pos = currentMessageInputStream.get_pos();
+		
+		Element element = new Element("struct").att("position", Integer.toHexString(pos));
 		out.startElement(element);
 
 
@@ -607,27 +673,28 @@ public class CDRParser
 		}
 
 		String unionTypeName = unionType.name();
-		
+
 		String switchTypeName = switch_ts_resolved.toString();
+
+		int pos = currentMessageInputStream.get_pos();
 		
-		Element unionElement = new Element("union").att("type", unionTypeName);
+		Element unionElement = new Element("union").att("position", Integer.toHexString(pos)).att("type", unionTypeName);
 		out.startElement(unionElement);
 
-		Element switchElement = new Element("switch").att("type", switchTypeName);
+		Element switchElement = new Element("switch").att("type",
+				switchTypeName);
 		out.startElement(switchElement);
-		
+
 		listType(switch_type_spec);
 
 		out.endElement(switchElement);
-		
+
 		String disc = switch_type_encountered.toString();
-		
 
-		
+
 		//.att(				"value", disc);
-		
-		String discType = switch_type_spec.getIDLTypeName();
 
+		String discType = switch_type_spec.getIDLTypeName();
 
 
 		SwitchBody switchBody = unionType.switch_body;
@@ -689,20 +756,19 @@ public class CDRParser
 
 			String bodyType = t.getIDLTypeName();
 
-//			unionElement.att("bodyType", bodyType);
-	
+			//			unionElement.att("bodyType", bodyType);
+
 			Element bodyElement = new Element("body").att("type", bodyType);
 			out.startElement(bodyElement);
 
-			
+
 			listType(t);
 
 			out.endElement(bodyElement);
 
 		}
-		
-		
-		
+
+
 		out.endElement(unionElement);
 	}
 
@@ -1121,7 +1187,7 @@ public class CDRParser
 		return null;
 
 	}
-	
+
 	private String toHex(byte b)
 	{
 		char[] c = new char[2];
@@ -1142,24 +1208,24 @@ public class CDRParser
 
 		byte[] chunk;
 
-		for (i=0;i<n;i++)
+		for (i = 0; i < n; i++)
 		{
-				sb.append(toHex(message[i]));
-				sb.append(' ');
+			sb.append(toHex(message[i]));
+			sb.append(' ');
 		}
 		sb.append(' ');
-		
-		for (i=0;i<n;i++)
+
+		for (i = 0; i < n; i++)
 		{
-				char c = (char) message[i];
-				if (!(Character.isLetterOrDigit(c)))
-				{
-					c = '.';
-				}
-				sb.append(c);
+			char c = (char) message[i];
+			if (!(Character.isLetterOrDigit(c)))
+			{
+				c = '.';
+			}
+			sb.append(c);
 
 		}
-		
+
 		return sb.toString();
 	}
 

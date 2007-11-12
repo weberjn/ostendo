@@ -27,10 +27,12 @@ import java.math.BigDecimal;
  */
 public interface Output
 {
-
+//.att("position", Integer.toHexString(pos))
 	void start() throws OutputException;
 
 	void end() throws OutputException;
+	
+	void popElements(Element lastToPop) throws OutputException;
 
 	void startElement(Element element) throws OutputException;
 
