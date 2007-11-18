@@ -634,7 +634,7 @@ public class CDRParser
 			Declarator dm = m.declarator;
 
 			String name = dm.name();
-			String type = m.type_spec.getIDLTypeName();
+			String type = m.type_spec.getIDLTypeName(); 
 
 			pos = currentMessageInputStream.get_pos();
 
