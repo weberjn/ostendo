@@ -636,7 +636,9 @@ public class CDRParser
 			String name = dm.name();
 			String type = m.type_spec.getIDLTypeName();
 
-			Element memberelement = new Element("member").att("name", name)
+			pos = currentMessageInputStream.get_pos();
+
+			Element memberelement = new Element("member").att("position", Integer.toHexString(pos)).att("name", name)
 					.att("type", type);
 			out.startElement(memberelement);
 
