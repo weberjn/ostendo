@@ -98,7 +98,7 @@ public class XMLOutput implements Output
 				break;
 			}
 			Element e = (Element)openElements.pop();
-			endElement(e);
+			endElement(e, false);
 		}
 	}
 	
@@ -120,12 +120,20 @@ public class XMLOutput implements Output
 
 	public void endElement(Element element) throws OutputException
 	{
+		endElement(element, true);
+	}
+	
+	private void endElement(Element element, boolean pop) throws OutputException
+	{
 
 		try
 		{
 			transformerHandler.endElement("", "", element.getName());
 			
-			openElements.pop();
+			if (pop)
+			{
+				openElements.pop();
+			}
 		}
 		catch (Exception e)
 		{

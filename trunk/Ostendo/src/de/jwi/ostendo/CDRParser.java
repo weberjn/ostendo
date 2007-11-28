@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -443,7 +442,7 @@ public class CDRParser
 		
 		int pos = currentMessageInputStream.get_pos();		
 
-		currentMessageInputStream.read_string();
+		repositoryId = currentMessageInputStream.read_string();
 
 		for (i = 0; i < exIDs.length; i++)
 		{
