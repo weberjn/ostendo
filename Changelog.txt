@@ -1,3 +1,6 @@
+2007-11-28 : 0.4.2
+- fixed bug in handling of User Exceptions and broken messages
+
 2007-11-12
 - graceful bailing out of broken messages
 - output current position in CDRStream
