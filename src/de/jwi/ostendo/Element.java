@@ -32,6 +32,7 @@ public class Element
 	String name;
 	AttributesImpl attributes;
 	
+	
 	public Element(String name)
 	{
 		this.name = name;
@@ -52,5 +53,14 @@ public class Element
 	public String getName()
 	{
 		return name;
+	}
+
+	public String toString()
+	{
+		if (name != null)
+		{
+			return "Element: "+name;
+		}
+		return super.toString();
 	}
 }
