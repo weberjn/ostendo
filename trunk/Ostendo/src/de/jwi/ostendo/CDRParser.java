@@ -21,7 +21,6 @@ package de.jwi.ostendo;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.Enumeration;
@@ -193,9 +192,7 @@ public class CDRParser
 		Element messages = new Element("messages").att("Ostendo", version);
 		out.startElement(messages);
 
-		int pos = currentMessageInputStream.get_pos();
-		
-		element = new Element("message").att("position", Integer.toHexString(pos)).att("interface", typeId);
+		element = new Element("message").att("pos", getPosition()).att("interface", typeId);
 		element.att("msgType", msgTypeS).att("msgSize",
 				Integer.toString(msgSize));
 		element.att("GIOP", Integer.toString(_GIOPMajor) + "."
@@ -255,9 +252,7 @@ public class CDRParser
 			org.omg.IOP.ServiceContext[] service_context)
 			throws OutputException
 	{
-		int pos = currentMessageInputStream.get_pos();
-		
-		Element serviceContexts = new Element("servicecontexts").att("position", Integer.toHexString(pos));
+		Element serviceContexts = new Element("servicecontexts").att("pos", getPosition());
 		Element context;
 
 		out.startElement(serviceContexts);
@@ -286,9 +281,7 @@ public class CDRParser
 		OpDecl opDecl = (OpDecl) operation;
 		String name = opDecl.name();
 
-		int pos = currentMessageInputStream.get_pos();
-		
-		Element element = new Element("operation").att("position", Integer.toHexString(pos));
+		Element element = new Element("operation").att("pos", getPosition());
 		element.att("name", name);
 		out.startElement(element);
 
@@ -320,8 +313,35 @@ public class CDRParser
 		out.startElement(broken);
 
 		StringWriter sw = new StringWriter();
+		sw.write(e.getClass().getName() + " " +  e.getMessage());
+		sw.write('\n');
+		
+		int i = 0;
 
-		e.printStackTrace(new PrintWriter(sw));
+		StackTraceElement[] ste = e.getStackTrace();
+		boolean beenHere = false;
+
+		// only output own part of stacktrace
+		
+		for (i=0;i<ste.length;i++)
+		{
+			String s = ste[i].toString(); 
+			sw.write('\t');
+			sw.write(s);
+			sw.write('\n');
+			if (s.indexOf(getClass().getName()) > -1)
+			{
+				beenHere = true;
+			}
+			else
+			{
+				if (beenHere)
+				{
+					break;
+				}
+			}
+		}
+		
 		String s = sw.toString();
 
 		out.data(s);
@@ -342,9 +362,7 @@ public class CDRParser
 		OpDecl opDecl = (OpDecl) operation;
 		String name = opDecl.name();
 
-		int pos = currentMessageInputStream.get_pos();
-		
-		Element element = new Element("operation").att("position", Integer.toHexString(pos));
+		Element element = new Element("operation").att("pos", getPosition());
 		element.att("name", name);
 		out.startElement(element);
 
@@ -355,9 +373,7 @@ public class CDRParser
 			{
 				String type = opDecl.opTypeSpec.getIDLTypeName();
 
-				pos = currentMessageInputStream.get_pos();
-				
-				Element result = new Element("result").att("position", Integer.toHexString(pos)).att("type", type);
+				Element result = new Element("result").att("pos", getPosition()).att("type", type);
 				out.startElement(result);
 
 				listType(opDecl.opTypeSpec);
@@ -404,9 +420,9 @@ public class CDRParser
 		org.omg.CORBA.SystemException systemException = org.jacorb.orb.SystemExceptionHelper
 				.read(currentMessageInputStream);
 
-		int pos = currentMessageInputStream.get_pos();
 		
-		Element element = new Element("SystemException").att("position", Integer.toHexString(pos));
+		
+		Element element = new Element("SystemException").att("pos", getPosition());
 		out.startElement(element);
 
 		Element content;
@@ -440,7 +456,7 @@ public class CDRParser
 
 		String repositoryId = null;
 		
-		int pos = currentMessageInputStream.get_pos();		
+				
 
 		repositoryId = currentMessageInputStream.read_string();
 
@@ -456,7 +472,7 @@ public class CDRParser
 
 		TypeSpec t = sn.resolvedTypeSpec();
 
-		Element element = new Element("UserException").att("position", Integer.toHexString(pos));
+		Element element = new Element("UserException").att("pos", getPosition());
 		element.att("repositoryId", repositoryId);
 		out.startElement(element);
 
@@ -486,9 +502,9 @@ public class CDRParser
 		String pname = p.simple_declarator.name();
 		String ptype = p.paramTypeSpec.getIDLTypeName();
 		
-		int pos = currentMessageInputStream.get_pos();
+		
 
-		Element element = new Element("parameter").att("position", Integer.toHexString(pos)).att("name", pname).att(
+		Element element = new Element("parameter").att("pos", getPosition()).att("name", pname).att(
 				"attribute", paramAttr).att("type", ptype);
 		out.startElement(element);
 
@@ -545,9 +561,9 @@ public class CDRParser
 
 		String elementType = sequenceType.elementTypeSpec().getIDLTypeName();
 
-		int pos = currentMessageInputStream.get_pos();
 		
-		Element sequence = new Element("sequence").att("position", Integer.toHexString(pos)).att("length",
+		
+		Element sequence = new Element("sequence").att("pos", getPosition()).att("length",
 				Integer.toString(sequenceLength)).att("elementtype",
 				elementType);
 		out.startElement(sequence);
@@ -571,9 +587,9 @@ public class CDRParser
 
 		int[] dims = arrayTypeSpec.dims;
 		
-		int pos = currentMessageInputStream.get_pos();	
+			
 
-		Element array = new Element("array").att("position", Integer.toHexString(pos));
+		Element array = new Element("array").att("pos", getPosition());
 		out.startElement(array);
 		
 		ArrayTypeSpec t = arrayTypeSpec;
@@ -620,9 +636,9 @@ public class CDRParser
 	{
 		// @see org.jacorb.idl.StructType.printHelperClass()
 
-		int pos = currentMessageInputStream.get_pos();
 		
-		Element element = new Element("struct").att("position", Integer.toHexString(pos));
+		
+		Element element = new Element("struct").att("pos", getPosition());
 		out.startElement(element);
 
 
@@ -635,9 +651,7 @@ public class CDRParser
 			String name = dm.name();
 			String type = m.type_spec.getIDLTypeName(); 
 
-			pos = currentMessageInputStream.get_pos();
-
-			Element memberelement = new Element("member").att("position", Integer.toHexString(pos)).att("name", name)
+			Element memberelement = new Element("member").att("pos", getPosition()).att("name", name)
 					.att("type", type);
 			out.startElement(memberelement);
 
@@ -677,9 +691,9 @@ public class CDRParser
 
 		String switchTypeName = switch_ts_resolved.toString();
 
-		int pos = currentMessageInputStream.get_pos();
 		
-		Element unionElement = new Element("union").att("position", Integer.toHexString(pos)).att("type", unionTypeName);
+		
+		Element unionElement = new Element("union").att("pos", getPosition()).att("type", unionTypeName);
 		out.startElement(unionElement);
 
 		Element switchElement = new Element("switch").att("type",
@@ -1189,6 +1203,15 @@ public class CDRParser
 
 	}
 
+	private String getPosition()
+	{
+		int pos = currentMessageInputStream.get_pos();
+		
+		String p = Integer.toString(pos)+"(0x"+Integer.toHexString(pos)+")";
+		
+		return p;
+	}
+	
 	private String toHex(byte b)
 	{
 		char[] c = new char[2];
