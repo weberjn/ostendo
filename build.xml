@@ -70,7 +70,7 @@
 		      <jar jarfile="${dist}/${ant.project.name}-${ostendo.version}.jar">
 		         <fileset dir="${build}" includes="de/jwi/ostendo/**/*.class"
 		         	excludes="de/jwi/ostendo/testidl/*.class"/>
- 		      	 <fileset dir="." includes="version.properties"/>
+ 		      	 <fileset dir="${src}" includes="version.properties"/>
 		      </jar>
 		  </target>	
 
