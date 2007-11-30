@@ -99,7 +99,7 @@
 		
 		<path id="runtime.path">
    			<fileset dir="${dist}">
-	    		<include name="*.jar"/>
+	    		<include name="${ant.project.name}-${ostendo.version}.jar"/>
 	    	</fileset>
 			<path refid="jacorb.classpath"/>
 		</path>
