@@ -21,6 +21,8 @@ package de.jwi.ostendo;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.Enumeration;
@@ -313,11 +315,11 @@ public class CDRParser
 		out.startElement(broken);
 
 		StringWriter sw = new StringWriter();
-		sw.write(e.getClass().getName() + " " +  e.getMessage());
-		sw.write('\n');
+		PrintWriter pw = new PrintWriter(sw);
+		
+		pw.println(e.getClass().getName() + " " +  e.getMessage());
 		
 		int i = 0;
-
 		StackTraceElement[] ste = e.getStackTrace();
 		boolean beenHere = false;
 
@@ -326,9 +328,8 @@ public class CDRParser
 		for (i=0;i<ste.length;i++)
 		{
 			String s = ste[i].toString(); 
-			sw.write('\t');
-			sw.write(s);
-			sw.write('\n');
+
+			pw.println("\tat " + s);
 			if (s.indexOf(getClass().getName()) > -1)
 			{
 				beenHere = true;
