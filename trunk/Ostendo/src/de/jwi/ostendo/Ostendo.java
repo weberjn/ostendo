@@ -14,8 +14,11 @@ package de.jwi.ostendo;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import org.jacorb.idl.Spec;
@@ -89,26 +92,42 @@ public class Ostendo
 			System.exit(1);
 		}
 
+		Spec theParsedSpec = null;
+		
+		
 		String typeId = args[0];
 		String idlName = args[1];
 		String requestmessage = args[2];
 		String replymessage = null;
 
+		if ("-unknown".equals(args[0]))
+		{
+			requestmessage = args[1];
+			idlName = null;
+			typeId = null;
+		}
+		else
 		if (args.length > 3)
 		{
 			replymessage = args[3];
 		}
-
-		Spec theParsedSpec = ParserCaller.getInstance().loadIDL(idlName);
-
-		if (theParsedSpec == null)
+		
+		if (idlName != null)
 		{
-			throw new RuntimeException("could not parse IDL " + idlName);
+			theParsedSpec = ParserCaller.getInstance().loadIDL(idlName);
+
+			if (theParsedSpec == null)
+			{
+				throw new RuntimeException("could not parse IDL " + idlName);
+			}
 		}
 
 		String iorOrInterface = null;
 		
-		Output out = new XMLOutput(new PrintWriter(System.out));
+		PrintStream ps = System.out; 
+		ps = new PrintStream(new FileOutputStream("x.xml"));
+		
+		Output out = new XMLOutput(new PrintWriter(new OutputStreamWriter(ps,"UTF-8")));
 
 		byte[] messageReq = readMessage(requestmessage);
 
@@ -123,6 +142,7 @@ public class Ostendo
 
 		c.parseMessage(out);
 
+		ps.close();
 	}
 
 }

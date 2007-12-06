@@ -43,6 +43,8 @@ public interface Output
 	void data(short s) throws OutputException;
 
 	void data(int s) throws OutputException;
+	
+	void data(long s) throws OutputException;
 
 	void data(boolean b) throws OutputException;
 
