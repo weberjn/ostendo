@@ -51,7 +51,7 @@ public class XMLOutput implements Output
 			Transformer serializer = transformerHandler.getTransformer();
 
 			serializer.setOutputProperty(OutputKeys.INDENT, "yes");
-
+			serializer.setOutputProperty(OutputKeys.ENCODING,"UTF-8");
 			StreamResult streamResult = new StreamResult(out);
 
 			transformerHandler.setResult(streamResult);
@@ -164,6 +164,11 @@ public class XMLOutput implements Output
 	public void data(int s) throws OutputException
 	{
 		data(Integer.toString(s));
+	}
+	
+	public void data(long s) throws OutputException
+	{
+		data(Long.toString(s));
 	}
 	
 	public void data(boolean b) throws OutputException
