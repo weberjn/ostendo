@@ -39,7 +39,7 @@ public class XMLOutput implements Output
 	TransformerHandler transformerHandler;
 	Stack openElements;
 
-	public XMLOutput(Writer out) throws OutputException
+	public XMLOutput(Writer out, String encoding) throws OutputException
 	{
 		try
 		{
@@ -51,7 +51,7 @@ public class XMLOutput implements Output
 			Transformer serializer = transformerHandler.getTransformer();
 
 			serializer.setOutputProperty(OutputKeys.INDENT, "yes");
-			serializer.setOutputProperty(OutputKeys.ENCODING,"UTF-8");
+			serializer.setOutputProperty(OutputKeys.ENCODING,encoding);
 			StreamResult streamResult = new StreamResult(out);
 
 			transformerHandler.setResult(streamResult);

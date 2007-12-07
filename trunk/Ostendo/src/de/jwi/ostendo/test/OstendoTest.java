@@ -103,7 +103,7 @@ public class OstendoTest extends TestCase
 
 		ByteArrayOutputStream bos = new ByteArrayOutputStream(4096);
 
-		Output out = new XMLOutput(new PrintWriter(bos));
+		Output out = new XMLOutput(new PrintWriter(bos), "UTF-8");
 
 		c.parseMessage(out);
 

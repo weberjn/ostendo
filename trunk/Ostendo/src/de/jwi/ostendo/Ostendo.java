@@ -31,6 +31,7 @@ import de.jwi.ostendo.jacorbidl.ParserCaller;
  */
 public class Ostendo
 {
+	public static final String ENCODING = "UTF-8";
 
 	public static byte[] readMessage(String n) throws IOException
 	{
@@ -80,7 +81,7 @@ public class Ostendo
 	{
 		System.err.println("usage:");
 		System.err.println(Ostendo.class.getName()
-			+ " <typeId> <IDL> <requestmessage> [<replymessage>]");
+			+ "[-o outfile] <typeId> <IDL> <requestmessage> [<replymessage>]");
 	}
 
 
@@ -94,22 +95,31 @@ public class Ostendo
 
 		Spec theParsedSpec = null;
 		
+		int n = 0;
 		
-		String typeId = args[0];
-		String idlName = args[1];
-		String requestmessage = args[2];
+		String outfile = null;
+		
+		if ("-o".equals(args[n]))
+		{
+			outfile = args[++n];
+			n++;
+		}
+		
+		String typeId = args[n];
+		String idlName = args[n+1];
+		String requestmessage = args[n+2];
 		String replymessage = null;
 
-		if ("-unknown".equals(args[0]))
+		if ("-unknown".equals(args[n]))
 		{
-			requestmessage = args[1];
+			requestmessage = args[n+1];
 			idlName = null;
 			typeId = null;
 		}
 		else
-		if (args.length > 3)
+		if (args.length > n+3)
 		{
-			replymessage = args[3];
+			replymessage = args[n+3];
 		}
 		
 		if (idlName != null)
@@ -125,9 +135,13 @@ public class Ostendo
 		String iorOrInterface = null;
 		
 		PrintStream ps = System.out; 
-		ps = new PrintStream(new FileOutputStream("x.xml"));
 		
-		Output out = new XMLOutput(new PrintWriter(new OutputStreamWriter(ps,"UTF-8")));
+		if (outfile != null)
+		{
+			ps = new PrintStream(new FileOutputStream(outfile));
+		}
+		
+		Output out = new XMLOutput(new PrintWriter(new OutputStreamWriter(ps,ENCODING)), ENCODING);
 
 		byte[] messageReq = readMessage(requestmessage);
 
@@ -142,7 +156,10 @@ public class Ostendo
 
 		c.parseMessage(out);
 
-		ps.close();
+		if (outfile != null)
+		{
+			ps.close();
+		}
 	}
 
 }
