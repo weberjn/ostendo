@@ -154,7 +154,7 @@ public class Ostendo
 
 		CDRParser c = new CDRParser(theParsedSpec, typeId, messageReq, messageRepl);
 
-		c.parseMessage(out);
+		c.parseMessage(out, idlName, requestmessage, replymessage);
 
 		if (outfile != null)
 		{

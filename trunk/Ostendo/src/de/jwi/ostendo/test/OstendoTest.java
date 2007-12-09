@@ -65,14 +65,14 @@ public class OstendoTest extends TestCase
 	String repositoryID;
 
 	org.jacorb.orb.ORB orb;
+	
+	String idlName = "src/de/jwi/ostendo/testidl/server.idl";
 
 	protected void setUp() throws Exception
 	{
 		super.setUp();
 
 		messageDir = new File("messagelog");
-
-		String idlName = "src/de/jwi/ostendo/testidl/server.idl";
 
 		theParsedSpec = ParserCaller.getInstance().loadIDL(idlName);
 
@@ -94,9 +94,12 @@ public class OstendoTest extends TestCase
 	private byte[] executeTest(String requestName, String replyName)
 			throws Exception
 	{
-		byte[] requestMsg = Ostendo.readMessage(new File(messageDir,
-				requestName));
-		byte[] replyMsg = Ostendo.readMessage(new File(messageDir, replyName));
+		File request = new File(messageDir,
+				requestName);
+		File reply = new File(messageDir, replyName);
+		
+		byte[] requestMsg = Ostendo.readMessage(request);
+		byte[] replyMsg = Ostendo.readMessage(reply);
 
 		CDRParser c = new CDRParser(orb, theParsedSpec, repositoryID,
 				requestMsg, replyMsg);
@@ -105,7 +108,7 @@ public class OstendoTest extends TestCase
 
 		Output out = new XMLOutput(new PrintWriter(bos), "UTF-8");
 
-		c.parseMessage(out);
+		c.parseMessage(out, idlName, request.toString(), reply.toString());
 
 		return bos.toByteArray();
 	}

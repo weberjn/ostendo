@@ -21,10 +21,11 @@ package de.jwi.ostendo;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -70,9 +71,12 @@ import org.jacorb.orb.giop.MessageInputStream;
 import org.jacorb.orb.giop.Messages;
 import org.jacorb.orb.giop.ReplyInputStream;
 import org.jacorb.orb.giop.RequestInputStream;
+import org.omg.GIOP.IORAddressingInfo;
 import org.omg.GIOP.MsgType_1_1;
 import org.omg.GIOP.ReplyStatusType_1_2;
+import org.omg.IOP.IOR;
 import org.omg.IOP.ServiceContext;
+import org.omg.IOP.TaggedProfile;
 
 /**
  * @author Juergen Weber 
@@ -100,11 +104,12 @@ public class CDRParser
 	private ORB orb;
 
 	private static String version = "";
+	private static String home = "";
 
 	static
 	{
 		InputStream is = CDRParser.class
-				.getResourceAsStream("/version.properties");
+				.getResourceAsStream("/ostendo.properties");
 		if (is != null)
 		{
 			Properties p = new Properties();
@@ -112,6 +117,7 @@ public class CDRParser
 			{
 				p.load(is);
 				version = p.getProperty("ostendo.version");
+				home = p.getProperty("ostendo.home");
 			}
 			catch (IOException e)
 			{
@@ -137,7 +143,7 @@ public class CDRParser
 		this(null, theParsedSpec, ior, requestMessage, replyMessage);
 	}
 
-	public void parseMessage(Output out) throws OutputException
+	public void parseMessage(Output out, String idlName, String requestFile, String replyFile) throws OutputException
 	{
 		Element element = null;
 
@@ -190,13 +196,21 @@ public class CDRParser
 		int messageLen = misRequest.msg_size;
 
 		String operationName = misRequest.req_hdr.operation;
+		
+		SimpleDateFormat df = new SimpleDateFormat( "yyyy-MM-dd HH:mm" );
 
 		Operation theOperation = findOperation(theInterface, operationName);
 		out.start();
-		Element messages = new Element("messages").att("Ostendo", version);
+		Element messages = new Element("messages").att("convertedBy", "Ostendo " + version + " - " + home);
+		messages.att("conversionDate", df.format(new Date()));
+		messages.att("interfaceID", typeId).att("IDL",idlName).att("request", requestFile);
+		if (replyFile != null)
+		{
+			messages.att("reply", requestFile);
+		}
 		out.startElement(messages);
 
-		element = new Element("message").att("pos", getPosition()).att("interface", typeId);
+		element = new Element("message").att("pos", getPosition());
 		element.att("msgType", msgTypeS).att("requestId",Integer.toString(requestId)).att("msgSize",
 				Integer.toString(msgSize));
 		element.att("GIOP", Integer.toString(_GIOPMajor) + "."
@@ -205,6 +219,9 @@ public class CDRParser
 
 
 		out.startElement(element);
+
+		org.omg.GIOP.TargetAddress targetAddress = misRequest.req_hdr.target;
+		listTargetAddress(targetAddress);
 
 		listServiceContexts(misRequest.req_hdr.service_context);
 
@@ -254,12 +271,75 @@ public class CDRParser
 		out.endElement(messages);
 		out.end();
 	}
+	
+	
+	private void listTargetAddress(org.omg.GIOP.TargetAddress targetAddress)
+	throws OutputException
+	{
+		Element target = new Element("targetAddress");
+		out.startElement(target);
+		
+		switch (targetAddress.discriminator())
+		{
+			case 0:
+			{
+				Element objectKey = new Element("objectKey");
+				out.startElement(objectKey);
+
+				String s = toString(targetAddress.object_key());
+				out.data(s);
+
+				out.endElement(objectKey);
+				break;
+			}
+			case 1:
+			{
+				Element profile = new Element("taggedProfile").att("profileId", Integer.toString(targetAddress.profile().tag));
+				out.startElement(profile);
+
+				String s = toString(targetAddress.profile().profile_data);
+				out.data(s);
+
+				out.endElement(profile);
+				break;
+			}
+			case 2:
+			{
+				Element _IORInfo = new Element("IORAddressingInfo").att("selectedProfileIndex", Integer.toString(targetAddress.ior().selected_profile_index));;
+				out.startElement(_IORInfo);
+
+				IORAddressingInfo _IORAddressingInfo = targetAddress.ior();
+				
+				IOR _IOR = _IORAddressingInfo.ior;
+				
+				Element ior = new Element("ior").att("typeID", _IOR.type_id);
+				out.startElement(ior);
+				
+				TaggedProfile[] profiles = _IOR.profiles;
+				for (int i=0; i< profiles.length;i++)
+				{
+					Element profile = new Element("taggedProfile").att("profileId", Integer.toString(profiles[i].tag));
+					out.startElement(profile);
+					String s = toString(profiles[i].profile_data);
+					out.data(s);
+					out.endElement(profile);
+				}
+
+				out.endElement(ior);
+				
+				out.endElement(_IORInfo);
+				break;
+			}
+		}
+		out.endElement(target);
+		
+	}
 
 	private void listServiceContexts(
 			org.omg.IOP.ServiceContext[] service_context)
 			throws OutputException
 	{
-		Element serviceContexts = new Element("servicecontexts").att("pos", getPosition());
+		Element serviceContexts = new Element("servicecontexts");
 		Element context;
 
 		out.startElement(serviceContexts);
@@ -1227,32 +1307,33 @@ public class CDRParser
 		return new String(c);
 	}
 
-	private String toString(byte[] message)
+	private String toString(byte[] data)
 	{
 		StringBuffer sb = new StringBuffer();
-		int i, p = 0, n = message.length;
+		int i, p = 0, n = data.length;
 
 
 		int s;
 
-		byte[] chunk;
-
 		for (i = 0; i < n; i++)
 		{
-			sb.append(toHex(message[i]));
+			sb.append(toHex(data[i]));
 			sb.append(' ');
 		}
 		sb.append(' ');
 
 		for (i = 0; i < n; i++)
 		{
-			char c = (char) message[i];
-			if (!(Character.isLetterOrDigit(c)))
+			char c = (char) data[i];
+			if ((c >= ' ' && c <= '~') // Unicode Character Table: Basic Latin
+					|| Character.isLetter(c)) // Umlauts
 			{
-				c = '.';
+				sb.append(c);
 			}
-			sb.append(c);
-
+			else
+			{
+				sb.append('.');
+			}
 		}
 
 		return sb.toString();
