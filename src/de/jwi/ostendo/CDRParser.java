@@ -252,12 +252,13 @@ public class CDRParser
 
 			element = new Element("message").att("pos", getPosition());
 			element.att("msgType", msgTypeS).att("requestId",Integer.toString(requestId)).att("msgSize",
-					Integer.toString(msgSize)).att("status", status);
-			element.att("GIOPMajor", Integer.toString(_GIOPMajor)).att(
-					"GIOPMinor", Integer.toString(_GIOPMinor)).att("littleEndian",
-							Boolean.toString(isLittleEndian));
+					Integer.toString(msgSize));
+			element.att("GIOP", Integer.toString(_GIOPMajor) + "."
+							+ Integer.toString(_GIOPMinor)).att("littleEndian",
+									Boolean.toString(isLittleEndian));
+					
+			element.att("status", status);
 
-			element.att("interface", typeId);
 			out.startElement(element);
 
 			listServiceContexts(misReply.rep_hdr.service_context);
