@@ -653,7 +653,20 @@ public class CDRParser
 				Integer.toString(sequenceLength)).att("elementtype",
 				elementType);
 		out.startElement(sequence);
-
+		
+		
+		if (sequenceType.max != null)
+		{
+			String s = sequenceType.max.toString();
+			
+			int bounds = Integer.decode(s).intValue();
+			
+			if (sequenceLength>bounds)
+			{
+				flagError("Sequence exceeds bounds. IDL defines "+s + ", got " + sequenceLength);
+			}
+		}
+		
 		for (i = 0; i < sequenceLength; i++)
 		{
 			Element element = new Element("element");
@@ -1009,6 +1022,20 @@ public class CDRParser
 	private void listType(StringType type) throws OutputException
 	{
 		String value = currentMessageInputStream.read_string();
+		
+		if (type.max != null)
+		{
+			String s = type.max.toString();
+			
+			int bounds = Integer.decode(s).intValue();
+			
+			if (value.length()>bounds)
+			{
+				flagError("String exceeds bounds. IDL defines "+s + ", got " + value.length());
+			}
+		}
+		
+		
 		out.data(value);
 	}
 
@@ -1289,6 +1316,18 @@ public class CDRParser
 
 	}
 
+	
+	private void flagError(String s) throws OutputException
+	{
+		Element element = new Element("ERROR");
+		out.startElement(element);
+
+		out.data(s);
+
+		out.endElement(element);
+
+	}
+	
 	private String getPosition()
 	{
 		int pos = currentMessageInputStream.get_pos();
