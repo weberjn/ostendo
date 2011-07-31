@@ -3,164 +3,155 @@
 
 <project name="ostendo" default="dist" basedir=".">
 
-	<property file="build.properties"/>
-	
-	<property name="src" value="src"/>
-	<property name="stubs" value="stubs"/>
-	<property name="lib" value="lib"/>
-	<property name="build" value="bin"/>
-	<property name="dist" value="dist"/>
+	<property file="build.properties" />
 
-    <property file="${src}/version.properties"/>
-	
+	<property name="src" value="src" />
+	<property name="stubs" value="stubs" />
+	<property name="lib" value="lib" />
+	<property name="build" value="bin" />
+	<property name="dist" value="dist" />
+
+	<property file="${src}/version.properties" />
+
 	<path id="jacorb.classpath">
 		<fileset dir="${lib}">
-			    	<include name="*.jar"/>
+			<include name="*.jar" />
 		</fileset>
-	    <fileset dir="${JACORB}/lib">
-	    	<include name="*.jar"/>
-	    </fileset>
-	    <fileset dir="${XALAN}">
-	    	<include name="xalan.jar"/>
-	    </fileset>
+		<fileset dir="${JACORB}/lib">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${XALAN}">
+			<include name="xalan.jar" />
+		</fileset>
 	</path>
 
-	  <target name="init">
-	  	<fail message="property JACORB not set in build.properties">
-	  	     <condition>
-	  	       <not>
-	  	         <isset property="JACORB"/>
-	  	       </not>
-	  	     </condition>
-  	   </fail>
-	<fail message="property XALAN not set in build.properties">
-	  	     <condition>
-	  	       <not>
-	  	         <isset property="XALAN"/>
-	  	       </not>
-	  	     </condition>
-  	   </fail>
+	<target name="init">
+		<fail message="property JACORB not set in build.properties">
+			<condition>
+				<not>
+					<isset property="JACORB" />
+				</not>
+			</condition>
+		</fail>
+		<fail message="property XALAN not set in build.properties">
+			<condition>
+				<not>
+					<isset property="XALAN" />
+				</not>
+			</condition>
+		</fail>
 
-	    <echo message="Ostendo version = ${ostendo.version}"/>
-	    <echo message="Java version = ${java.version}"/>
-	  	<echo message="Using JacORB home = ${JACORB}"/>
-	  	<echo message="Using XALAN home = ${XALAN}"/>
-	  	
-	    <mkdir dir="${build}"/>
-	    <mkdir dir="${dist}"/>
-	    <mkdir dir="${stubs}"/>
-	  	
-	  </target>
+		<echo message="Ostendo version = ${ostendo.version}" />
+		<echo message="Java version = ${java.version}" />
+		<echo message="Using JacORB home = ${JACORB}" />
+		<echo message="Using XALAN home = ${XALAN}" />
 
-	  <target name="clean">
-	    <delete dir="${build}"/>
-	    <delete dir="${dist}/"/>
-	  </target>
+		<mkdir dir="${build}" />
+		<mkdir dir="${dist}" />
+		<mkdir dir="${stubs}" />
 
-	
-	  <target name="compile" depends="init">
-	    <javac target="1.4" destdir="${build}" 
-	    	includes="de/jwi/ostendo/*">
-	    	 <src path="${src}"/>
-		    <classpath refid="jacorb.classpath"/>
-	    </javac>
-	  </target>
-	  
-	   <target name="jar" depends="compile">
-		      <jar jarfile="${dist}/${ant.project.name}-${ostendo.version}.jar">
-		         <fileset dir="${build}" includes="de/jwi/ostendo/**/*.class"
-		         	excludes="de/jwi/ostendo/testidl/*.class"/>
- 		      	 <fileset dir="${src}" includes="version.properties"/>
-		      </jar>
-		  </target>	
+	</target>
 
-	  <target name="dist" depends="jar">
-		 <zip destfile="${dist}/${ant.project.name}-${ostendo.version}.zip">
-			    <zipfileset  prefix="${ant.project.name}/${dist}" 
-			    dir="${dist}" includes="${ant.project.name}-${ostendo.version}.jar"/>
-			    <zipfileset prefix="${ant.project.name}"
-			    dir="." includes="build.xml,build.properties.template,COPYING,Changelog.txt,readme.txt"/>
-			<zipfileset prefix="${ant.project.name}"
-			 			    dir="." includes="www/*.*"/>
-		    <zipfileset prefix="${ant.project.name}"
-		    dir="." includes="messagelog/*,ior.txt"/>
-		 	<zipfileset prefix="${ant.project.name}/src"
-		 			    dir="${src}"/>
-		 	<zipfileset prefix="${ant.project.name}"
-		 			 			    dir="${src}/de/jwi/ostendo/testidl" includes="server.idl"/>
-	 		<zipfileset prefix="${ant.project.name}/lib"
-		 				 			    dir="${lib}"/>		 	
-		    </zip>
-	  </target>
+	<target name="clean">
+		<delete dir="${build}" />
+		<delete dir="${dist}/" />
+	</target>
 
 
-	
+	<target name="compile" depends="init">
+		<javac target="1.4" destdir="${build}" includes="de/jwi/ostendo/*">
+			<src path="${src}" />
+			<classpath refid="jacorb.classpath" />
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile">
+		<jar jarfile="${dist}/${ant.project.name}-${ostendo.version}.jar">
+			<fileset dir="${build}" includes="de/jwi/ostendo/**/*.class" excludes="de/jwi/ostendo/testidl/*.class" />
+			<fileset dir="${src}" includes="version.properties" />
+		</jar>
+	</target>
+
+	<target name="dist" depends="jar">
+		<zip destfile="${dist}/${ant.project.name}-${ostendo.version}.zip">
+			<zipfileset prefix="${ant.project.name}/${dist}" dir="${dist}" includes="${ant.project.name}-${ostendo.version}.jar" />
+			<zipfileset prefix="${ant.project.name}" dir="." includes="build.xml,build.properties.template,COPYING,Changelog.txt,readme.txt" />
+			<zipfileset prefix="${ant.project.name}" dir="." includes="www/*.*" />
+			<zipfileset prefix="${ant.project.name}" dir="." includes="messagelog/*,ior.txt" />
+			<zipfileset prefix="${ant.project.name}/src" dir="${src}" />
+			<zipfileset prefix="${ant.project.name}" dir="${src}/de/jwi/ostendo/testidl" includes="server.idl" />
+			<zipfileset prefix="${ant.project.name}/lib" dir="${lib}" />
+		</zip>
+	</target>
+
+
+
 	<target name="rundemo" depends="init">
-		
+
 		<path id="runtime.path">
-   			<fileset dir="${dist}">
-	    		<include name="${ant.project.name}-${ostendo.version}.jar"/>
-	    	</fileset>
-			<path refid="jacorb.classpath"/>
+			<fileset dir="${dist}">
+				<include name="${ant.project.name}-${ostendo.version}.jar" />
+			</fileset>
+			<path refid="jacorb.classpath" />
 		</path>
 
 		<java classname="de.jwi.ostendo.Ostendo">
-	         <arg line="IDL:ostendo/test/DataServer:1.0 src/de/jwi/ostendo/testidl/server.idl messagelog/04-handleNested-Request.bin messagelog/04-handleNested-Reply.bin"/>
-	         <classpath>
-	           <path refid="runtime.path"/>
-	         </classpath>
-	       </java>		
-	   </target>     
-	   
+			<arg line="IDL:ostendo/test/DataServer:1.0 src/de/jwi/ostendo/testidl/server.idl messagelog/04-handleNested-Request.bin messagelog/04-handleNested-Reply.bin" />
+			<classpath>
+				<path refid="runtime.path" />
+			</classpath>
+		</java>
+	</target>
+
 
 	<target name="idl" depends="init">
 		<java classname="org.jacorb.idl.parser" fork="true">
-	         <arg line="-d ${stubs} src/de/jwi/ostendo/testidl/server.idl"/>
-	         <classpath>
-	           <path refid="jacorb.classpath"/>
-	         </classpath>
-	       </java>		
-	   </target>     
+			<arg line="-d ${stubs} src/de/jwi/ostendo/testidl/server.idl" />
+			<classpath>
+				<path refid="jacorb.classpath" />
+			</classpath>
+		</java>
+	</target>
 
 	<target name="compileTest" depends="idl">
-		<javac target="1.4" srcdir="${src}:${stubs}"
-		         destdir="${build}"
-		         includes="de/jwi/ostendo/testidl/**,de/jwi/ostendo/interceptor/**,ostendo/**"
-		         debug="on">
+		<javac target="1.4" srcdir="${src}:${stubs}" destdir="${build}" includes="de/jwi/ostendo/testidl/**,de/jwi/ostendo/interceptor/**,ostendo/**" debug="on">
 			<classpath>
-	           <path refid="jacorb.classpath"/>
-            </classpath>
+				<path refid="jacorb.classpath" />
+			</classpath>
 		</javac>
 	</target>
-	
+
 	<target name="testserver">
 		<java classname="de.jwi.ostendo.testidl.Server" fork="true">
-	         <arg line="ior.txt"/>
-	         <classpath>
-	           <path refid="jacorb.classpath"/>
-	         	<path location="${build}"/>
-	         </classpath>
-			<sysproperty key="org.omg.CORBA.ORBClass" value="org.jacorb.orb.ORB"/>
-			<sysproperty key="org.omg.CORBA.ORBSingletonClass" value="org.jacorb.orb.ORBSingleton"/>
-	       </java>		
-	   </target>     	
+			<arg line="ior.txt" />
+			<classpath>
+				<path refid="jacorb.classpath" />
+				<path location="${build}" />
+			</classpath>
+			<sysproperty key="org.omg.CORBA.ORBClass" value="org.jacorb.orb.ORB" />
+			<sysproperty key="org.omg.CORBA.ORBSingletonClass" value="org.jacorb.orb.ORBSingleton" />
+		</java>
+	</target>
 
 	<target name="testclient">
 		<java classname="de.jwi.ostendo.testidl.Client" fork="true">
-	         <arg line="ior.txt"/>
-	         <classpath>
-	           <path refid="jacorb.classpath"/>
-	         	<path location="${build}"/>
-	         </classpath>
-			<sysproperty key="org.omg.CORBA.ORBClass" value="org.jacorb.orb.ORB"/>
-			<sysproperty key="org.omg.CORBA.ORBSingletonClass" value="org.jacorb.orb.ORBSingleton"/>
-	       </java>		
-	   </target>     	
-	
+			<arg line="ior.txt" />
+			<classpath>
+				<path refid="jacorb.classpath" />
+				<path location="${build}" />
+			</classpath>
+			<sysproperty key="org.omg.CORBA.ORBClass" value="org.jacorb.orb.ORB" />
+			<sysproperty key="org.omg.CORBA.ORBSingletonClass" value="org.jacorb.orb.ORBSingleton" />
+		</java>
+	</target>
+
 	<target name="test">
 		<junit printsummary="yes" fork="yes" haltonfailure="yes">
-		  <formatter type="plain"/>
-		  <test name="de.jwi.ostendo.test.OstendoTest"/>
-		</junit> 
-	</target>     		
+			<classpath>
+				<pathelement location="lib/junit-4.1.jar" />
+			</classpath>
+			<formatter type="plain" />
+			<test name="de.jwi.ostendo.test.OstendoTest" />
+		</junit>
+	</target>
 </project>
