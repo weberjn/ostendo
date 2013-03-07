@@ -1,3 +1,6 @@
+2013-03-07 1.0.4
+- corrected handling of datatype fixed
+
 2007-12-31 1.0.3
 - added checks for sequence and string bounds
 

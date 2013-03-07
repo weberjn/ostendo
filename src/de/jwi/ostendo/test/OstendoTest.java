@@ -239,7 +239,7 @@ public class OstendoTest extends TestCase
 		XPath xpath = factory.newXPath();
 
 		String s = xpath.evaluate(
-				"/messages/message[1]/operation/parameter/dimension/dimension[2]/element[3]",
+				"/messages/message[1]/operation/parameter[1]/array/dimension/dimension[2]/element[3]",
 				inputSource);
 
 		assertEquals("2.3", s);
