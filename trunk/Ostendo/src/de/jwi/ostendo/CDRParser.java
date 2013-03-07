@@ -628,16 +628,16 @@ public class CDRParser
 
 	private void listType(FixedPointType fixedPointType) throws OutputException
 	{
-		int scale = fixedPointType.scale;
-		int digits = fixedPointType.digits;
-		BigDecimal fixed = currentMessageInputStream.read_fixed();
-		fixed = fixed.movePointLeft(2);
+		short scale = (short)fixedPointType.scale;
+		short digits = (short)fixedPointType.digits;
+		BigDecimal fixed = currentMessageInputStream.read_fixed((short)(digits - scale), scale);
 		Element element = new Element("fixed").att("digits",
 				Integer.toString(digits)).att("scale", Integer.toString(scale));
 		out.startElement(element);
 		out.data(fixed);
 		out.endElement(element);
 	}
+
 
 	private void listType(SequenceType sequenceType) throws OutputException
 	{
