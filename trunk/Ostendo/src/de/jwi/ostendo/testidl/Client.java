@@ -40,7 +40,7 @@ import ostendo.test.OutData;
 import ostendo.test.DataServerPackage.Currency;
 import ostendo.test.DataServerPackage.DataException;
 import ostendo.test.DataServerPackage.DataServerContainer;
-import ostendo.test.DataServerPackage.FixedTHolder;
+import ostendo.test.DataServerPackage.Fixed52Holder;
 import ostendo.test.DataServerPackage.Floats;
 import ostendo.test.DataServerPackage.Nums;
 import ostendo.test.DataServerPackage.StringContainer;
@@ -193,12 +193,15 @@ public class Client
 	{
 		BigDecimal a = new BigDecimal(3.5).setScale(2);
 		BigDecimal b = new BigDecimal("4.4").setScale(2);
-		FixedTHolder res = new FixedTHolder();
+		Fixed52Holder res = new Fixed52Holder();
 		
-		server.addFixed(a, b, res);
+		BigDecimal d = server.addFixed(a, b, res);
+		
+		System.out.println(d);
 		
 		BigDecimal c = res.value;
 		
+		System.out.println(c);
 	}
 	
 }

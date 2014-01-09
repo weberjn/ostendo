@@ -3,7 +3,7 @@ module ostendo
 {
 
 	const string MAGICVALUE = "WJ";
-	typedef string magict;
+	typedef string<2> magict;
 
     module test {
 
@@ -55,7 +55,7 @@ module ostendo
             OutData getData(in InData data, inout boolean doRaise, in string magic)
             raises(DataException);
             
-            OutData handleNested(in string astring, in long along, in Nested data, in string magic);
+            OutData handleNested(in string astring, in long along, in Nested data, in magict magic);
             
             typedef float Floats23[2][3];
             
@@ -107,8 +107,12 @@ module ostendo
             DataServerContainer getObjectreference();
             
             
-            typedef fixed <5,2> FixedT;
-            void addFixed(in FixedT a, in FixedT b, out FixedT res);
+            typedef fixed <5,2> Fixed52;
+            typedef fixed <6,3> Fixed63;
+            // @return 248.070 
+            Fixed63 addFixed(in Fixed52 a, in Fixed52 b, out Fixed52 res);
+            
+
         };
                
     };

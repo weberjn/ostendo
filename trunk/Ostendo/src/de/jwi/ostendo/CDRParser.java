@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -189,7 +190,7 @@ public class CDRParser
 		 */
 
 
-		misRequest = new RequestInputStream(orb, requestMessage);
+		misRequest = new RequestInputStream(orb, null, requestMessage);
 
 		currentMessageInputStream = misRequest;
 
@@ -202,7 +203,8 @@ public class CDRParser
 		Operation theOperation = findOperation(theInterface, operationName);
 		out.start();
 		Element messages = new Element("messages").att("convertedBy", "Ostendo " + version + " - " + home);
-		messages.att("conversionDate", df.format(new Date()));
+		String s = df.format(new Date());
+		messages.att("conversionDate", s);
 		messages.att("interfaceID", typeId).att("IDL",idlName).att("request", requestFile);
 		if (replyFile != null)
 		{
@@ -457,7 +459,7 @@ public class CDRParser
 		{
 			if (replyStatus == ReplyStatusType_1_2.NO_EXCEPTION)
 			{
-				String type = opDecl.opTypeSpec.getIDLTypeName();
+				String type = opDecl.opTypeSpec.typeName();
 
 				Element result = new Element("result").att("pos", getPosition()).att("type", type);
 				out.startElement(result);
@@ -586,7 +588,7 @@ public class CDRParser
 
 
 		String pname = p.simple_declarator.name();
-		String ptype = p.paramTypeSpec.getIDLTypeName();
+		String ptype = p.paramTypeSpec.typeName();
 		
 		
 
@@ -628,9 +630,10 @@ public class CDRParser
 
 	private void listType(FixedPointType fixedPointType) throws OutputException
 	{
-		short scale = (short)fixedPointType.scale;
-		short digits = (short)fixedPointType.digits;
-		BigDecimal fixed = currentMessageInputStream.read_fixed((short)(digits - scale), scale);
+		int scale = fixedPointType.scale;
+		int digits = fixedPointType.digits;
+		BigDecimal fixed = currentMessageInputStream.read_fixed();
+		fixed = fixed.movePointLeft(scale);
 		Element element = new Element("fixed").att("digits",
 				Integer.toString(digits)).att("scale", Integer.toString(scale));
 		out.startElement(element);
@@ -638,14 +641,13 @@ public class CDRParser
 		out.endElement(element);
 	}
 
-
 	private void listType(SequenceType sequenceType) throws OutputException
 	{
 		int i;
 
 		int sequenceLength = currentMessageInputStream.read_ulong();
 
-		String elementType = sequenceType.elementTypeSpec().getIDLTypeName();
+		String elementType = sequenceType.elementTypeSpec().typeName();
 
 		
 		
@@ -748,7 +750,7 @@ public class CDRParser
 			Declarator dm = m.declarator;
 
 			String name = dm.name();
-			String type = m.type_spec.getIDLTypeName(); 
+			String type = m.type_spec.typeName(); 
 
 			Element memberelement = new Element("member").att("pos", getPosition()).att("name", name)
 					.att("type", type);
@@ -776,8 +778,18 @@ public class CDRParser
 
 		Enumeration en;
 
-		TypeSpec switch_type_spec = unionType.switch_type_spec.type_spec;
-
+		TypeSpec switch_type_spec = null;
+		
+		// unionType.switch_type_spec
+		try {
+			Field f1 = UnionType.class.getDeclaredField("switch_type_spec");
+			f1.setAccessible(true);
+			switch_type_spec = (TypeSpec)f1.get(unionType);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+        switch_type_spec = switch_type_spec.typeSpec();
+		
 		TypeSpec switch_ts_resolved = switch_type_spec;
 
 		if (switch_type_spec.type_spec instanceof ScopedName)
@@ -808,11 +820,23 @@ public class CDRParser
 
 		//.att(				"value", disc);
 
-		String discType = switch_type_spec.getIDLTypeName();
+		String discType = switch_type_spec.typeName();
 
+		SwitchBody switchBody = null;
+		
+		// unionType.switch_body
+		try
+		{
+		Field f2 = UnionType.class.getDeclaredField("switch_body");
+        f2.setAccessible(true);
+        switchBody = (SwitchBody)f2.get(unionType);
+	} catch (Exception e) {
+		throw new RuntimeException(e);
+	}
 
-		SwitchBody switchBody = unionType.switch_body;
-
+        
+        
+		
 		Case c = null, actualCase = null, defaultCase = null;
 		for (Enumeration e = switchBody.caseListVector.elements(); e
 				.hasMoreElements();)
@@ -868,7 +892,7 @@ public class CDRParser
 
 			//	lastInteger
 
-			String bodyType = t.getIDLTypeName();
+			String bodyType = t.typeName();
 
 			//			unionElement.att("bodyType", bodyType);
 
