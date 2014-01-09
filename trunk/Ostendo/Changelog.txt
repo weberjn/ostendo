@@ -1,3 +1,7 @@
+2014-01-08 1.0.5
+- updated Xerces and JacORB 3.4
+- fixed bug in fixed scale
+
 2013-03-07 1.0.4
 - corrected handling of datatype fixed
 
