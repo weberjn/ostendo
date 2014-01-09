@@ -81,10 +81,10 @@ public class MessageSaveInterceptor extends org.omg.CORBA.LocalObject
 
 		String operation = clientRequestInfoImpl.operation();
 
-		byte[] buffer = getBufferCopy(clientRequestInfoImpl.request_os);
+		byte[] buffer = clientRequestInfoImpl.getRequestStream().getBufferCopy();
 
 		// unfortunately JacORB hasn't inserted the message size yet.
-		insertMsgSize(clientRequestInfoImpl.request_os, buffer);
+		insertMsgSize(clientRequestInfoImpl.getRequestStream(), buffer);
 
 		String magic = new String(buffer, 0, 4);
 
@@ -127,8 +127,8 @@ public class MessageSaveInterceptor extends org.omg.CORBA.LocalObject
 	{
 		ClientRequestInfoImpl clientRequestInfoImpl = (ClientRequestInfoImpl) ri;
 
-		byte[] buffer = getBufferCopy(clientRequestInfoImpl.reply_is);
-
+		byte[] buffer = clientRequestInfoImpl.getReplyStream().getBufferCopy();
+		
 		int requestId = Messages.getRequestId(buffer);
 		String operation = (String)mapRequestIDToOperation.get(new Integer(requestId));
 
@@ -151,48 +151,6 @@ public class MessageSaveInterceptor extends org.omg.CORBA.LocalObject
 	public void receive_other(ClientRequestInfo ri) throws ForwardRequest
 	{
 		int x = 5;
-	}
-
-	/*
-	 * Field buffer of ReplyInputStream is not public, so get it via reflection
-	 */
-	private byte[] getBufferCopy(Object theStream)
-	{
-		Object o;
-		Field field = null;
-
-		try
-		{
-			Class c = theStream.getClass();
-			do
-			{
-				try
-				{
-					field = c.getDeclaredField("buffer");
-					break;
-				}
-				catch (NoSuchFieldException e)
-				{
-				}
-
-				c = c.getSuperclass();
-			}
-			while (c != null);
-
-			field.setAccessible(true);
-			o = field.get(theStream);
-		}
-		catch (Exception e)
-		{
-			throw new RuntimeException(e);
-		}
-
-		byte[] buffer = (byte[]) o;
-
-		byte[] b = new byte[buffer.length];
-		System.arraycopy(buffer, 0, b, 0, buffer.length);
-		return b;
-
 	}
 
 	private void writeBuffer(String n, byte[] b, int len)

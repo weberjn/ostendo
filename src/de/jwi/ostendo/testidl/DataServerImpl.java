@@ -35,7 +35,7 @@ import ostendo.test.OutData;
 import ostendo.test.DataServerPackage.Currency;
 import ostendo.test.DataServerPackage.DataException;
 import ostendo.test.DataServerPackage.DataServerContainer;
-import ostendo.test.DataServerPackage.FixedTHolder;
+import ostendo.test.DataServerPackage.Fixed52Holder;
 import ostendo.test.DataServerPackage.Floats;
 import ostendo.test.DataServerPackage.StringContainer;
 
@@ -131,10 +131,15 @@ public class DataServerImpl extends DataServerPOA
 		return new DataServerContainer(server, MAGICVALUE.value);
 	}
 	
-	public void addFixed(BigDecimal a, BigDecimal b, FixedTHolder res)
+	public BigDecimal addFixed(BigDecimal a, BigDecimal b, Fixed52Holder res)
 	{
 		 BigDecimal c = a.add(b);
+		 
+		 BigDecimal d = new BigDecimal("248.070");
+		 
 		 res.value = c;
+		 
+		 return d;
 	}
 	
 }

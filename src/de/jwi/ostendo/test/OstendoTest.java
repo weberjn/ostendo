@@ -341,16 +341,25 @@ public class OstendoTest extends TestCase
 		b = executeTest(requestName, replyName);
 		printResult(b);
 		
-		InputSource inputSource = new InputSource(new ByteArrayInputStream(b));
-
 		XPathFactory factory = XPathFactory.newInstance();
 		XPath xpath = factory.newXPath();
 
+		InputSource inputSource = new InputSource(new ByteArrayInputStream(b));
 		String s = xpath.evaluate(
 				"/messages/message[2]/operation/result/parameter[@name='res']/fixed",
 				inputSource);
 		
 		assertEquals("7.90", s);
+
+		inputSource = new InputSource(new ByteArrayInputStream(b));
+		s = xpath.evaluate(
+				"/messages/message[2]/operation/result/fixed",
+				inputSource);
+		
+		assertEquals("248.070", s);
+		
+		
+		
 	}
 
 	
