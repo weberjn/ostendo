@@ -208,7 +208,7 @@ public class CDRParser
 		messages.att("interfaceID", typeId).att("IDL",idlName).att("request", requestFile);
 		if (replyFile != null)
 		{
-			messages.att("reply", requestFile);
+			messages.att("reply", replyFile);
 		}
 		out.startElement(messages);
 
@@ -443,7 +443,7 @@ public class CDRParser
 		/*
 		 "If the reply_status value is NO_EXCEPTION, the body is encoded as if it were
 		 a structure holding first any operation return value, then any inout and out
-		 parameters in the order in which they appear in the operation’s OMG IDL
+		 parameters in the order in which they appear in the operationï¿½s OMG IDL
 		 definition, from left to right." (15.4.3)
 		 */
 
