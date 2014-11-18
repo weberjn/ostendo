@@ -119,6 +119,7 @@ public class CDRParser
 				p.load(is);
 				version = p.getProperty("ostendo.version");
 				home = p.getProperty("ostendo.home");
+				is.close();
 			}
 			catch (IOException e)
 			{
