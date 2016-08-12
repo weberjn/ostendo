@@ -1,0 +1,120 @@
+
+module ostendo 
+{
+
+	const string MAGICVALUE = "WJ";
+	typedef string<2> magict;
+
+    module test {
+
+	struct InData
+	{
+		string id;
+		string s;
+	};
+	    
+	    
+	struct OutData
+	{
+		string id;
+		long l;
+		string s;
+		float f;
+		string magic;
+	};
+	 
+	struct BasicTypes
+	{
+		float afloat;
+		double adouble;
+		short ashort;
+		long along;
+		char achar;
+		boolean aboolean;
+		octet aoctet;
+	};	 
+
+	typedef BasicTypes BasicTypes1;
+
+	struct Nested
+	{
+		short ashort;
+		BasicTypes1 aBasicTypes;
+	};
+	    
+	    
+	    
+        interface DataServer 
+        {
+            
+            exception DataException
+			{
+	    		string why;
+			};
+            
+            OutData getData(in InData data, inout boolean doRaise, in string magic)
+            raises(DataException);
+            
+            OutData handleNested(in string astring, in long along, in Nested data, in magict magic);
+            
+            typedef float Floats23[2][3];
+            
+            typedef string Strings[2];
+
+			struct StringContainer
+			{
+				Strings theStrings;
+			};		            	
+
+            void sendArrays(in Floats23 theFloats23, in StringContainer theStringContainer, in string magic);
+		            	
+		    typedef sequence<long> LongSeq;
+		    
+		    typedef sequence<LongSeq,3> LongLongSeq;
+		            	
+            void sendSequences(in LongSeq theLongSeq, in LongLongSeq theLongLongSeq, in string magic);
+            
+            union Floats switch (short)
+		    {
+		        case 5: float f;
+		        case 1: double d;
+		        default: InData id;
+		    };
+            
+            union Nums switch (char)
+		    {
+		        case 'f': float f;
+		        case 'l': long l;
+		        default: short s;
+		    };
+		            
+			typedef sequence<Nums> NumsSeq;		            
+		            
+            void writeUnions(in Floats theFloats, in NumsSeq theNumsSeq, in string magic);
+            
+            enum Currency {mark, pound, dollar, yen, franc};
+            
+            double changeCurrency(in Currency fromCurrency, 
+            		in Currency toCurrency, in double amount, in string magic);
+            
+            
+            struct DataServerContainer
+			{
+				DataServer theDataServer;
+				string magic;
+			};	
+			
+            DataServerContainer getObjectreference();
+            
+            
+            typedef fixed <5,2> Fixed52;
+            typedef fixed <6,3> Fixed63;
+            // @return 248.070 
+            Fixed63 addFixed(in Fixed52 a, in Fixed52 b, out Fixed52 res);
+            
+
+        };
+               
+    };
+
+};
